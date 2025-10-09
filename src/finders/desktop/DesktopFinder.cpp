@@ -129,9 +129,10 @@ void CDesktopFinder::cacheEntry(const std::string& path) {
     const auto NAME = extract("Name");
     const auto ICON = extract("Icon");
     const auto EXEC = extract("Exec");
+    const auto NODISPLAY = extract("NoDisplay") == "true";
 
-    if (EXEC.empty() || NAME.empty()) {
-        Debug::log(TRACE, "Skipping entry, empty name / exec");
+    if (EXEC.empty() || NAME.empty() || NODISPLAY) {
+        Debug::log(TRACE, "Skipping entry, empty name / exec / NoDisplay");
         return;
     }
 
