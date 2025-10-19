@@ -20,6 +20,7 @@ static void printHelp() {
     std::cout << "Hyprlauncher usage: hyprlauncher [arg [...]].\n\nArguments:\n"
               << " -d | --daemon              | Do not open after initializing\n"
               << " -o | --options \"a,b,c\"   | Pass an explicit option array\n"
+              << " -c | --clipboard           | Launch in clipboard history mode\n"
               << " -h | --help                | Print this menu\n"
               << " -v | --version             | Print version info\n"
               << "    | --quiet               | Disable all logging\n"
@@ -34,6 +35,7 @@ static void printVersion() {
 int main(int argc, char** argv, char** envp) {
 
     bool                     openByDefault = true;
+    bool                     clipboardMode = false;
     std::vector<std::string> explicitOptions;
 
     for (int i = 1; i < argc; ++i) {
@@ -64,6 +66,9 @@ int main(int argc, char** argv, char** envp) {
                 explicitOptions.emplace_back(e);
             }
             ++i;
+        } else if (sv == "-c" || sv == "--clipboard") {
+            clipboardMode = true;
+            continue;
         } else {
             Debug::log(ERR, "Unrecognized argument: {}", sv);
             return 1;
@@ -74,7 +79,9 @@ int main(int argc, char** argv, char** envp) {
 
     if (socket->m_connected) {
         Debug::log(TRACE, "Active instance already, opening launcher.");
-        if (!explicitOptions.empty())
+        if (clipboardMode)
+            socket->sendOpenWithOptions({"clipboard_mode"});
+        else if (!explicitOptions.empty())
             socket->sendOpenWithOptions(explicitOptions);
         else
             socket->sendOpen();
@@ -93,19 +100,29 @@ int main(int argc, char** argv, char** envp) {
     g_mathFinder->init();
     g_ipcFinder->init();
 
-    socket.reset();
-
-    if (!explicitOptions.empty()) {
-        g_ipcFinder->setData(explicitOptions);
-        g_queryProcessor->overrideQueryProvider(g_ipcFinder);
-    }
-
     g_configManager = makeUnique<CConfigManager>();
     g_configManager->parse();
 
     g_clipboardFinder = makeUnique<CClipboardFinder>();
     g_clipboardFinder->init();
     g_clipboardFinder->onConfigReload();
+
+    socket.reset();
+
+    if (!explicitOptions.empty()) {
+        auto it = std::find(explicitOptions.begin(), explicitOptions.end(), "clipboard_mode");
+        if (it != explicitOptions.end()) {
+            explicitOptions.erase(it);
+            g_queryProcessor->overrideQueryProvider(g_clipboardFinder);
+        } else {
+            g_ipcFinder->setData(explicitOptions);
+            g_queryProcessor->overrideQueryProvider(g_ipcFinder);
+        }
+    }
+
+    if (clipboardMode) {
+        g_queryProcessor->overrideQueryProvider(g_clipboardFinder);
+    }
 
     g_ui = makeUnique<CUI>(openByDefault);
     g_ui->run();

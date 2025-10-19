@@ -19,11 +19,10 @@ static WP<IFinder> finderForName(const std::string& x) {
 }
 
 static std::pair<WP<IFinder>, bool> finderForPrefix(const char x) {
-    static auto PDEFAULTFINDER     = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:default_finder");
-    static auto PDESKTOPPREFIX     = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:desktop_prefix");
-    static auto PUNICODEPREFIX     = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:unicode_prefix");
-    static auto PMATHPREFIX        = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:math_prefix");
-    static auto PCLIPBOARDPREFIX   = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:clipboard_prefix");
+    static auto PDEFAULTFINDER = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:default_finder");
+    static auto PDESKTOPPREFIX = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:desktop_prefix");
+    static auto PUNICODEPREFIX = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:unicode_prefix");
+    static auto PMATHPREFIX    = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:math_prefix");
 
     if (x == (*PDESKTOPPREFIX)[0])
         return {g_desktopFinder, true};
@@ -31,8 +30,6 @@ static std::pair<WP<IFinder>, bool> finderForPrefix(const char x) {
         return {g_unicodeFinder, true};
     if (x == (*PMATHPREFIX)[0])
         return {g_mathFinder, true};
-    if (x == (*PCLIPBOARDPREFIX)[0]) 
-        return {g_clipboardFinder, true};
     return {finderForName(*PDEFAULTFINDER), false};
 }
 

@@ -2,6 +2,7 @@
 #include "../ui/UI.hpp"
 #include "../query/QueryProcessor.hpp"
 #include "../finders/ipc/IPCFinder.hpp"
+#include "../finders/clipboard/ClipboardFinder.hpp"
 
 #include <cstdlib>
 #include <filesystem>
@@ -60,8 +61,22 @@ void CServerIPCSocket::openWithOptions(const std::vector<const char*>& options) 
     if (g_ui->windowOpen())
         return;
 
-    g_ipcFinder->setData(options);
-    g_queryProcessor->overrideQueryProvider(g_ipcFinder);
+    bool                     clipboardMode = false;
+    std::vector<const char*> filteredOptions;
+    for (const auto& opt : options) {
+        if (std::string(opt) == "clipboard_mode") {
+            clipboardMode = true;
+        } else {
+            filteredOptions.push_back(opt);
+        }
+    }
+
+    if (clipboardMode) {
+        g_queryProcessor->overrideQueryProvider(g_clipboardFinder);
+    } else {
+        g_ipcFinder->setData(filteredOptions);
+        g_queryProcessor->overrideQueryProvider(g_ipcFinder);
+    }
     g_ui->setWindowOpen(true);
 }
 
