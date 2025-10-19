@@ -7,6 +7,7 @@
 #include <sys/inotify.h>
 
 #include <hyprutils/os/FileDescriptor.hpp>
+#include "../clipboard/ClipboardManager.hpp"
 
 class CConfigManager {
   public:
@@ -19,6 +20,7 @@ class CConfigManager {
     Hyprutils::OS::CFileDescriptor m_inotifyFd;
     std::vector<int>               m_watches;
     std::string                    m_configPath;
+    SClipboardConfig               clipboardConfig;
 
     void                           replantWatch();
 };

@@ -18,7 +18,7 @@ class CMathEntry : public IFinderResult {
     }
 
     virtual eFinderTypes type() {
-        return FINDER_UNICODE;
+        return FINDER_MATH;
     }
 
     virtual void run() {

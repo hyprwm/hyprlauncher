@@ -1,3 +1,4 @@
+#include "finders/clipboard/ClipboardFinder.hpp"
 #include "ui/UI.hpp"
 #include "helpers/Log.hpp"
 #include "finders/desktop/DesktopFinder.hpp"
@@ -73,6 +74,10 @@ int main(int argc, char** argv, char** envp) {
 
     g_configManager = makeUnique<CConfigManager>();
     g_configManager->parse();
+
+    g_clipboardFinder = makeUnique<CClipboardFinder>();
+    g_clipboardFinder->init();
+    g_clipboardFinder->onConfigReload();
 
     g_ui = makeUnique<CUI>(openByDefault);
     g_ui->run();
