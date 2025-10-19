@@ -2,6 +2,7 @@
 
 #include "../IFinder.hpp"
 #include "../../clipboard/ClipboardManager.hpp"
+#include "../Cache.hpp"
 
 class CClipboardFinder : public IFinder {
   public:
@@ -12,7 +13,8 @@ class CClipboardFinder : public IFinder {
     void                               onConfigReload();
 
   private:
-    UP<CClipboardManager>      m_pClipboardManager;
+    UP<CClipboardManager> m_pClipboardManager;
+    UP<CEntryCache>       m_entryFrequencyCache;
 };
 
 inline UP<CClipboardFinder> g_clipboardFinder;
