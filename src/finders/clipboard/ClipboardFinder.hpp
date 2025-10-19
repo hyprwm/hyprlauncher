@@ -2,7 +2,6 @@
 
 #include "../IFinder.hpp"
 #include "../../clipboard/ClipboardManager.hpp"
-#include <memory>
 
 class CClipboardFinder : public IFinder {
   public:
@@ -10,15 +9,10 @@ class CClipboardFinder : public IFinder {
     CClipboardFinder();
 
     virtual std::vector<SFinderResult> getResultsForQuery(const std::string& query);
-
-    void clearCache();
-
-    void onConfigReload();
+    void                               onConfigReload();
 
   private:
-    std::unique_ptr<CClipboardManager> m_pClipboardManager;
-
-    std::vector<SFinderResult> m_vCachedHistory;
+    UP<CClipboardManager>      m_pClipboardManager;
 };
 
 inline UP<CClipboardFinder> g_clipboardFinder;

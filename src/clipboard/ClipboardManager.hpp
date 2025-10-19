@@ -24,7 +24,4 @@ class CClipboardManager {
 
   private:
     SClipboardConfig m_sConfig;
-
-    static std::string               exec(const char* cmd);
-    static void                      pipeToCommand(const char* cmd, const std::string& input);
 };

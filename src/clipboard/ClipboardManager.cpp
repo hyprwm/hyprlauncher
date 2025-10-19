@@ -13,17 +13,10 @@ struct SPipeDeleter {
     }
 };
 
-struct SLineBuffer {
-    char* ptr = nullptr;
-    ~SLineBuffer() {
-        std::unique_ptr<char, decltype(&std::free)> ptr{nullptr, &std::free};
-    }
-};
-
 CClipboardManager::CClipboardManager(const SClipboardConfig& config) : m_sConfig(config) {}
 
 void CClipboardManager::executeCommand(const std::string& command, const std::string& arg) {
-    std::string finalCommand = command;
+    std::string finalCommand   = command;
     size_t      placeholderPos = finalCommand.find("{}");
 
     if (placeholderPos != std::string::npos) {
@@ -31,9 +24,7 @@ void CClipboardManager::executeCommand(const std::string& command, const std::st
         try {
             CProcess proc("/bin/sh", {"-c", finalCommand});
             proc.runAsync();
-        } catch (const std::exception& e) {
-            Debug::log(ERR, "Failed to execute command: {}", e.what());
-        }
+        } catch (const std::exception& e) { Debug::log(ERR, "Failed to execute command: {}", e.what()); }
     } else {
         std::unique_ptr<FILE, SPipeDeleter> pipe(popen(command.c_str(), "w"));
         if (!pipe) {
@@ -54,12 +45,11 @@ std::vector<std::string> CClipboardManager::getHistory() {
         throw std::runtime_error("popen() failed!");
     }
 
-    std::vector<std::string>    history;
-    SLineBuffer                 line;
-    size_t                      len = 0;
+    std::vector<std::string> history;
+    char                     buf[4096];
 
-    while (getline(&line.ptr, &len, pipe.get()) != -1) {
-        std::string s(line.ptr);
+    while (fgets(buf, sizeof(buf), pipe.get())) {
+        std::string s(buf);
         if (!s.empty() && s.back() == '\n') {
             s.pop_back();
         }
