@@ -45,5 +45,54 @@
       </description>
       <arg name="state" type="uint" summary="open state"/>
     </c2s>
+
+    <c2s name="open_with_options">
+      <description summary="Open the launcher with options">
+            Opens the launcher with given options. If the launcher
+            is already open, this is a no-op.
+      </description>
+      <arg name="options" type="array varchar" summary="option array"/>
+    </c2s>
+
+    <c2s name="get_info_object">
+      <description summary="Get launcher's info object">
+            Gets the launcher info object. That object will return some data about
+            the launcher's state
+      </description>
+      <returns iface="hyprlauncher_core_info"/>
+    </c2s>
+
+    <c2s name="destroy" destructor="true">
+      <description summary="Destroy this object">
+            Destroys this object. Children remain alive until destroyed.
+      </description>
+    </c2s>
+  </object>
+
+  <object name="hyprlauncher_core_info" version="1">
+    <description summary="manager object">
+      Info object, will emit various information about the state of the launcher
+    </description>
+
+    <s2c name="open_state">
+      <description summary="Open the launcher with options">
+            Emitted on creation of this object, and when the state changes.
+      </description>
+      <arg name="state" type="uint" summary="open state"/>
+    </s2c>
+
+    <s2c name="selection_made">
+      <description summary="Selection was made">
+            Emitted on selection by the user. The launcher will close immediately
+            after this is emitted.
+      </description>
+      <arg name="selected" type="varchar" summary="selected entry"/>
+    </s2c>
+
+    <c2s name="destroy" destructor="true">
+      <description summary="Destroy this object">
+            Destroys this object. Children remain alive until destroyed.
+      </description>
+    </c2s>
   </object>
 </protocol>

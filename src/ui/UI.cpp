@@ -87,10 +87,8 @@ CUI::CUI(bool open) : m_openByDefault(open) {
             if (m_activeElementId > 0)
                 m_activeElementId--;
             updateActive();
-        } else if (e.xkbKeysym == XKB_KEY_Return) {
-            m_currentResults.at(m_activeElementId).result->run();
-            setWindowOpen(false);
-        }
+        } else if (e.xkbKeysym == XKB_KEY_Return)
+            onSelected();
     });
 }
 
@@ -123,16 +121,7 @@ void CUI::setWindowOpen(bool open) {
     if (open == m_open)
         return;
 
-    static int counter = 0;
-
-    counter++;
-
     m_open = open;
-
-    if (counter > 1) {
-        Debug::log(LOG, "test {}", counter);
-        std::fflush(stdout);
-    }
 
     if (open) {
         m_inputBox->rebuild()->defaultText("")->commence();
@@ -145,8 +134,21 @@ void CUI::setWindowOpen(bool open) {
         m_window->open();
 
         m_inputBox->focus();
-    } else
+
+        g_queryProcessor->scheduleQueryUpdate("");
+    } else {
         m_window->close();
+        g_queryProcessor->overrideQueryProvider(WP<IFinder>{});
+    }
+
+    g_serverIPCSocket->sendOpenState(open);
+}
+
+void CUI::onSelected() {
+    g_serverIPCSocket->sendSelectionMade(m_currentResults.at(m_activeElementId).result->fuzzable());
+    m_currentResults.at(m_activeElementId).result->run();
+    setWindowOpen(false);
+    g_queryProcessor->overrideQueryProvider(WP<IFinder>{});
 }
 
 bool CUI::windowOpen() {

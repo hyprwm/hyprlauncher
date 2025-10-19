@@ -12,7 +12,7 @@
 using namespace Hyprutils::String;
 using namespace Hyprutils::Memory;
 
-constexpr const size_t CACHE_MAX_SIZE  = 512;
+constexpr const size_t CACHE_MAX_SIZE = 512;
 
 CEntryCache::CEntryCache(const std::string& name) {
     const auto HOME = getenv("HOME");
@@ -66,7 +66,7 @@ void CEntryCache::trimCache() {
         return;
 
     const auto TO_REMOVE = m_cacheStrings.size() - CACHE_MAX_SIZE;
-    m_cacheStrings = std::vector<std::string>{m_cacheStrings.begin() + TO_REMOVE, m_cacheStrings.end()};
+    m_cacheStrings       = std::vector<std::string>{m_cacheStrings.begin() + TO_REMOVE, m_cacheStrings.end()};
 }
 
 void CEntryCache::save() {

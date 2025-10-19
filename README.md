@@ -9,6 +9,7 @@ A multipurpose and versatile launcher / picker for Hyprland
 - Speedy: Fast, multi-threaded fuzzy searching
 - Daemon by default: instant opening of the launcher
 - Entry frequency caching: commonly used entries appear above others
+- Manual entry providing: make a simple selector from your own list
 
 ## Runtime dependencies
 

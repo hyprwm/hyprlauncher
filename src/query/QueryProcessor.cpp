@@ -46,6 +46,8 @@ CQueryProcessor::CQueryProcessor() {
             if (m_quit)
                 break;
 
+            std::lock_guard<std::mutex> lg(m_processingMutex);
+
             m_queryStrMutex.lock();
 
             std::string query = m_pendingQuery;
@@ -53,17 +55,26 @@ CQueryProcessor::CQueryProcessor() {
 
             m_queryStrMutex.unlock();
 
-            if (query.empty())
-                continue;
+            WP<IFinder> FINDER;
+            bool        eat = false;
 
-            const auto [FINDER, eat] = finderForPrefix(query[0]);
+            if (!m_overrideFinder) {
+                const auto [F, e] = finderForPrefix(query[0]);
 
-            if (eat && query.size() == 1)
+                if (e && query.size() == 1)
+                    continue;
+
+                FINDER = F;
+                eat    = e;
+            } else
+                FINDER = m_overrideFinder;
+
+            if (query.empty() && !m_overrideFinder)
                 continue;
 
             auto RESULTS = FINDER ? FINDER->getResultsForQuery(eat ? query.substr(1) : query) : std::vector<SFinderResult>{};
 
-            if (g_ui->m_backend)
+            if (g_ui && g_ui->m_backend)
                 g_ui->m_backend->addIdle([r = std::move(RESULTS)] mutable { g_ui->updateResults(std::move(r)); });
         }
     });
@@ -83,4 +94,9 @@ void CQueryProcessor::scheduleQueryUpdate(const std::string& str) {
     m_event        = true;
     m_queryStrMutex.unlock();
     m_threadCV.notify_all();
+}
+
+void CQueryProcessor::overrideQueryProvider(WP<IFinder> finder) {
+    std::lock_guard<std::mutex> lg(m_processingMutex);
+    m_overrideFinder = finder;
 }

@@ -33,6 +33,8 @@ class CUI {
     void updateActive();
 
   private:
+    void                                  onSelected();
+
     SP<Hyprtoolkit::CBackend>             m_backend;
     SP<Hyprtoolkit::IWindow>              m_window;
     SP<Hyprtoolkit::CRectangleElement>    m_background;
