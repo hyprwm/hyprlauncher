@@ -22,7 +22,7 @@ CEntryCache::CEntryCache(const std::string& name) {
 
     std::error_code ec;
     if (!std::filesystem::exists(HOME + std::string{"/.local/share/hyprlauncher"}, ec) || ec)
-        std::filesystem::create_directory(HOME + std::string{"/.local/share/hyprlauncher"});
+        std::filesystem::create_directories(HOME + std::string{"/.local/share/hyprlauncher"});
     m_cacheFullPath = HOME + std::string{"/.local/share/hyprlauncher/" + name + ".cache"};
 
     // load cache
