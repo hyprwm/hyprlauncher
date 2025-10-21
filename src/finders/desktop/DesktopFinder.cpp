@@ -16,12 +16,17 @@ using namespace Hyprutils::String;
 using namespace Hyprutils::OS;
 
 static std::optional<std::string> readFileAsString(const std::string& path) {
+    std::filesystem::path p(path);
     std::error_code ec;
 
-    if (!std::filesystem::exists(path, ec) || ec)
+    if (!std::filesystem::exists(p, ec) || ec)
         return std::nullopt;
 
-    std::ifstream file(path);
+    std::filesystem::path resolved = std::filesystem::canonical(p, ec);
+    if (ec || !std::filesystem::exists(resolved, ec) || ec || !std::filesystem::is_regular_file(resolved, ec))
+        return std::nullopt;
+
+    std::ifstream file(resolved);
     if (!file.good())
         return std::nullopt;
 
@@ -74,7 +79,9 @@ class CDesktopEntry : public IFinderResult {
     uint32_t    m_frequency = 0;
 };
 
-static constexpr std::array<const char*, 3> DESKTOP_ENTRY_PATHS = {"/usr/local/share/applications", "/usr/share/applications", "~/.local/share/applications"};
+static constexpr std::array<const char*, 5> DESKTOP_ENTRY_PATHS = {"/usr/local/share/applications", "/usr/share/applications", "~/.local/share/applications",
+                                                                   "/run/current-system/sw/share/applications",
+                                                                   "~/.local/state/nix/profiles/home-manager/home-path/share/applications"};
 
 //
 static std::string resolvePath(std::string p) {
@@ -115,7 +122,7 @@ void CDesktopFinder::recache() {
         if (ec)
             continue;
         for (const auto& e : it) {
-            if (!e.is_regular_file(ec) || ec)
+            if ((!e.is_regular_file(ec) && !e.is_symlink(ec)) || ec)
                 continue;
 
             cacheEntry(e.path().string());
