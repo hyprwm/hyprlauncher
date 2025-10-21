@@ -7,7 +7,12 @@
 #include <sys/inotify.h>
 
 #include <hyprutils/os/FileDescriptor.hpp>
-#include "../clipboard/ClipboardManager.hpp"
+
+struct SClipboardConfig {
+    std::string list_cmd   = "cliphist list";
+    std::string copy_cmd   = "cliphist decode | wl-copy";
+    std::string delete_cmd = "cliphist delete \"{}\"";
+};
 
 class CConfigManager {
   public:

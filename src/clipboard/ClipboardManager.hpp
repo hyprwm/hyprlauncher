@@ -2,24 +2,21 @@
 
 #include <string>
 #include <vector>
+#include "../config/ConfigManager.hpp"
 
-struct SClipboardConfig {
-    std::string list_cmd   = "cliphist list";
-    std::string copy_cmd   = "cliphist decode | wl-copy";
-    std::string delete_cmd = "cliphist delete";
-    std::string paste_cmd  = "wtype -M shift -P insert -m shift";
+struct SClipboardHistoryItem {
+  std::string original_line;
+  std::string display_line;
 };
 
 class CClipboardManager {
   public:
     CClipboardManager(const SClipboardConfig& config);
 
-    SClipboardConfig          getConfig() const;
-    std::vector<std::string>  getHistory();
+    SClipboardConfig                    getConfig() const;
+    std::vector<SClipboardHistoryItem>  getHistory();
 
-    void                      executeCommand(const std::string& command, const std::string& arg);
     void                      copyItem(const std::string& item);
-    void                      paste();
     void                      deleteItem(const std::string& item);
 
   private:

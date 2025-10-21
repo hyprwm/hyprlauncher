@@ -1,18 +1,21 @@
-#include "finders/clipboard/ClipboardFinder.hpp"
 #include "ui/UI.hpp"
 #include "helpers/Log.hpp"
 #include "finders/desktop/DesktopFinder.hpp"
 #include "finders/unicode/UnicodeFinder.hpp"
 #include "finders/math/MathFinder.hpp"
+#include "finders/clipboard/ClipboardFinder.hpp"
 #include "finders/ipc/IPCFinder.hpp"
 #include "socket/ClientSocket.hpp"
 #include "socket/ServerSocket.hpp"
 #include "query/QueryProcessor.hpp"
 #include "config/ConfigManager.hpp"
 
-#include <iostream>
-
+#include <algorithm>
+#include <csignal>
 #include <hyprutils/string/ConstVarList.hpp>
+#include <iostream>
+#include <string_view>
+#include <vector>
 
 using namespace Hyprutils::String;
 
@@ -20,7 +23,7 @@ static void printHelp() {
     std::cout << "Hyprlauncher usage: hyprlauncher [arg [...]].\n\nArguments:\n"
               << " -d | --daemon              | Do not open after initializing\n"
               << " -o | --options \"a,b,c\"   | Pass an explicit option array\n"
-              << " -c | --clipboard           | Launch in clipboard history mode\n"
+              << " -p | --provider <name>     | Launch with a specific provider (e.g., clipboard)\n"
               << " -h | --help                | Print this menu\n"
               << " -v | --version             | Print version info\n"
               << "    | --quiet               | Disable all logging\n"
@@ -32,11 +35,21 @@ static void printVersion() {
     std::cout << "Hyprlauncher v" << HYPRLAUNCHER_VERSION << std::endl;
 }
 
+static bool setProviderByName(const std::string& name) {
+    if      (name == "clipboard")      g_queryProcessor->overrideQueryProvider(g_clipboardFinder);
+    else if (name == "unicode")        g_queryProcessor->overrideQueryProvider(g_unicodeFinder);
+    else if (name == "math")           g_queryProcessor->overrideQueryProvider(g_mathFinder);
+    else return false;
+    return true;
+}
+
 int main(int argc, char** argv, char** envp) {
+    signal(SIGPIPE, SIG_IGN);
+    signal(SIGCHLD, SIG_IGN);
 
     bool                     openByDefault = true;
-    bool                     clipboardMode = false;
     std::vector<std::string> explicitOptions;
+    std::string              provider;
 
     for (int i = 1; i < argc; ++i) {
         std::string_view sv{argv[i]};
@@ -56,6 +69,13 @@ int main(int argc, char** argv, char** envp) {
         } else if (sv == "-v" || sv == "--version") {
             printVersion();
             return 0;
+        } else if (sv == "-p" || sv == "--provider") {
+            if (i + 1 >= argc) {
+                Debug::log(ERR, "Missing argument for --provider");
+                return 1;
+            }
+            provider = argv[i + 1];
+            ++i;
         } else if (sv == "-o" || sv == "--options") {
             if (i + 1 >= argc) {
                 Debug::log(ERR, "Missing argument for --options", sv);
@@ -66,12 +86,6 @@ int main(int argc, char** argv, char** envp) {
                 explicitOptions.emplace_back(e);
             }
             ++i;
-        } else if (sv == "-c" || sv == "--clipboard") {
-            clipboardMode = true;
-            continue;
-        } else {
-            Debug::log(ERR, "Unrecognized argument: {}", sv);
-            return 1;
         }
     }
 
@@ -79,10 +93,8 @@ int main(int argc, char** argv, char** envp) {
 
     if (socket->m_connected) {
         Debug::log(TRACE, "Active instance already, opening launcher.");
-        if (clipboardMode)
-            socket->sendOpenWithOptions({"clipboard_mode"});
-        else if (!explicitOptions.empty())
-            socket->sendOpenWithOptions(explicitOptions);
+        if (!provider.empty() || !explicitOptions.empty())
+            socket->sendOpenWithProvider(provider.empty() ? "ipc" : provider, explicitOptions);
         else
             socket->sendOpen();
         return 0;
@@ -94,34 +106,36 @@ int main(int argc, char** argv, char** envp) {
     g_unicodeFinder = makeUnique<CUnicodeFinder>();
     g_mathFinder    = makeUnique<CMathFinder>();
     g_ipcFinder     = makeUnique<CIPCFinder>();
+    g_clipboardFinder = makeUnique<CClipboardFinder>();
 
     g_desktopFinder->init();
     g_unicodeFinder->init();
     g_mathFinder->init();
     g_ipcFinder->init();
+    g_clipboardFinder->init();
 
     g_configManager = makeUnique<CConfigManager>();
     g_configManager->parse();
 
-    g_clipboardFinder = makeUnique<CClipboardFinder>();
-    g_clipboardFinder->init();
     g_clipboardFinder->onConfigReload();
 
     socket.reset();
 
     if (!explicitOptions.empty()) {
-        auto it = std::find(explicitOptions.begin(), explicitOptions.end(), "clipboard_mode");
+        auto it = std::ranges::find_if(explicitOptions, [](const std::string& s){
+            return s.ends_with("_mode");
+        });
+
         if (it != explicitOptions.end()) {
+            setProviderByName(it->substr(0, it->size() - 5));
             explicitOptions.erase(it);
-            g_queryProcessor->overrideQueryProvider(g_clipboardFinder);
         } else {
             g_ipcFinder->setData(explicitOptions);
             g_queryProcessor->overrideQueryProvider(g_ipcFinder);
         }
-    }
-
-    if (clipboardMode) {
-        g_queryProcessor->overrideQueryProvider(g_clipboardFinder);
+    } else if (!provider.empty()) {
+        if (!setProviderByName(provider))
+            Debug::log(WARN, "Unknown provider '{}'. Using default.", provider);
     }
 
     g_ui = makeUnique<CUI>(openByDefault);

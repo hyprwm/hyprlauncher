@@ -14,6 +14,7 @@ class CClientIPCSocket {
 
     void sendOpen();
     void sendOpenWithOptions(const std::vector<std::string>& opts);
+    void sendOpenWithProvider(const std::string& provider, const std::vector<std::string>& opts = {});
 
   private:
     SP<Hyprwire::IClientSocket>         m_socket;

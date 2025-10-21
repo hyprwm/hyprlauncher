@@ -2,10 +2,14 @@
 #include "../ui/UI.hpp"
 #include "../query/QueryProcessor.hpp"
 #include "../finders/ipc/IPCFinder.hpp"
+#include "../helpers/Log.hpp"
 #include "../finders/clipboard/ClipboardFinder.hpp"
+#include "../finders/math/MathFinder.hpp"
+#include "../finders/unicode/UnicodeFinder.hpp"
 
 #include <cstdlib>
 #include <filesystem>
+#include <map>
 
 constexpr const char*            SOCKET_NAME = ".hyprlauncher.sock";
 
@@ -31,7 +35,9 @@ CServerIPCSocket::CServerIPCSocket() {
         auto manager = m_managers.emplace_back(makeShared<CHyprlauncherCoreManagerObject>(std::move(obj)));
 
         manager->setSetOpenState([this](uint32_t state) { setOpenState(state); });
-        manager->setOpenWithOptions([this](std::vector<const char*> state) { openWithOptions(state); });
+        manager->setOpenWithOptions([this](std::vector<const char*> state) { openWithProvider("ipc", state); });
+
+        manager->setSetProviderWithOptions([this](const char* provider, std::vector<const char*> options) { openWithProvider(provider, options); });
 
         manager->setGetInfoObject([this, m = WP<CHyprlauncherCoreManagerObject>{manager}](uint32_t seq) {
             if (!m)
@@ -57,26 +63,35 @@ void CServerIPCSocket::setOpenState(uint32_t state) {
     }
 }
 
+void CServerIPCSocket::openWithProvider(const std::string& provider, const std::vector<const char*>& options) {
+    if (g_ui->windowOpen())
+        return;
+
+    Debug::log(LOG, "Request to open with provider: {}", provider);
+
+    if      (provider == "clipboard")     g_queryProcessor->overrideQueryProvider(g_clipboardFinder);
+    else if (provider == "unicode")       g_queryProcessor->overrideQueryProvider(g_unicodeFinder);
+    else if (provider == "math")          g_queryProcessor->overrideQueryProvider(g_mathFinder);
+    else if (provider == "ipc")           g_queryProcessor->overrideQueryProvider(g_ipcFinder);
+    else {
+        Debug::log(WARN, "Unknown provider requested via IPC: {}", provider);
+        g_ui->setWindowOpen(true);
+        return;
+    }
+
+    if (!options.empty()) {
+        g_ipcFinder->setData(options);
+    }
+
+    g_ui->setWindowOpen(true);
+}
+
 void CServerIPCSocket::openWithOptions(const std::vector<const char*>& options) {
     if (g_ui->windowOpen())
         return;
 
-    bool                     clipboardMode = false;
-    std::vector<const char*> filteredOptions;
-    for (const auto& opt : options) {
-        if (std::string(opt) == "clipboard_mode") {
-            clipboardMode = true;
-        } else {
-            filteredOptions.push_back(opt);
-        }
-    }
-
-    if (clipboardMode) {
-        g_queryProcessor->overrideQueryProvider(g_clipboardFinder);
-    } else {
-        g_ipcFinder->setData(filteredOptions);
-        g_queryProcessor->overrideQueryProvider(g_ipcFinder);
-    }
+    g_ipcFinder->setData(options);
+    g_queryProcessor->overrideQueryProvider(g_ipcFinder);
     g_ui->setWindowOpen(true);
 }
 

@@ -23,7 +23,6 @@ CConfigManager::CConfigManager() : m_inotifyFd(inotify_init()) {
     m_config->addConfigValue("clipboard:list_cmd", Hyprlang::STRING(&clipboardConfig.list_cmd));
     m_config->addConfigValue("clipboard:copy_cmd", Hyprlang::STRING(&clipboardConfig.copy_cmd));
     m_config->addConfigValue("clipboard:delete_cmd", Hyprlang::STRING(&clipboardConfig.delete_cmd));
-    m_config->addConfigValue("clipboard:paste_cmd", Hyprlang::STRING(&clipboardConfig.paste_cmd));
 
     m_config->commence();
 
