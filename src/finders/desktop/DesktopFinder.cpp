@@ -2,6 +2,7 @@
 #include "../../helpers/Log.hpp"
 #include "../Fuzzy.hpp"
 #include "../Cache.hpp"
+#include "../../config/ConfigManager.hpp"
 
 #include <algorithm>
 #include <filesystem>
@@ -46,13 +47,17 @@ class CDesktopEntry : public IFinderResult {
     }
 
     virtual void run() {
-        Debug::log(TRACE, "Running {}", m_exec);
+        static auto            PLAUNCHPREFIX = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:desktop_launch_prefix");
+        const std::string_view LAUNCH_PREFIX = *PLAUNCHPREFIX;
+
+        auto                   toExec = std::format("{}{}", LAUNCH_PREFIX.empty() ? std::string{""} : std::string{LAUNCH_PREFIX} + std::string{" "}, m_exec);
+
+        Debug::log(TRACE, "Running {}", toExec);
 
         g_desktopFinder->m_entryFrequencyCache->incrementCachedEntry(m_fuzzable);
         m_frequency = g_desktopFinder->m_entryFrequencyCache->getCachedEntry(m_fuzzable);
 
         // replace all funky codes with nothing
-        auto toExec = m_exec;
         replaceInString(toExec, "%U", "");
         replaceInString(toExec, "%f", "");
         replaceInString(toExec, "%F", "");
