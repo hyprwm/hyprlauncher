@@ -47,8 +47,7 @@ namespace Debug {
         if (quiet)
             return;
 
-        if (level != NONE) {
+        if (level != NONE)
             std::println("[{}] {}", logLevelString(level), std::vformat(fmt, std::make_format_args(args...)));
-        }
     }
 };

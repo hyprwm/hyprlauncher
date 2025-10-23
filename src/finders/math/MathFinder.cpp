@@ -13,8 +13,8 @@ class CMathEntry : public IFinderResult {
     CMathEntry()          = default;
     virtual ~CMathEntry() = default;
 
-    virtual std::string fuzzable() {
-        return "";
+    virtual const std::string& fuzzable() {
+        return m_fuzzable;
     }
 
     virtual eFinderTypes type() {
@@ -28,7 +28,7 @@ class CMathEntry : public IFinderResult {
         proc.runAsync();
     }
 
-    std::string m_expr, m_result;
+    std::string m_expr, m_result, m_fuzzable;
 };
 
 CMathFinder::CMathFinder() = default;
