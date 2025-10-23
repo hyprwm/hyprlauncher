@@ -9,9 +9,9 @@
 #include <hyprutils/os/FileDescriptor.hpp>
 
 struct SClipboardConfig {
-    std::string list_cmd   = "cliphist list";
-    std::string copy_cmd   = "cliphist decode | wl-copy";
-    std::string delete_cmd = "cliphist delete \"{}\"";
+    std::string listCmd   = "cliphist list";
+    std::string copyCmd   = "cliphist decode | wl-copy";
+    std::string deleteCmd = "cliphist delete {0}";
 };
 
 class CConfigManager {
@@ -25,7 +25,7 @@ class CConfigManager {
     Hyprutils::OS::CFileDescriptor m_inotifyFd;
     std::vector<int>               m_watches;
     std::string                    m_configPath;
-    SClipboardConfig               clipboardConfig;
+    SClipboardConfig               m_clipboardConfig;
 
     void                           replantWatch();
 };

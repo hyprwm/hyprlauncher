@@ -18,6 +18,14 @@ static WP<IFinder> finderForName(const std::string& x) {
     return WP<IFinder>{};
 }
 
+bool CQueryProcessor::setProviderByName(const std::string& name) {
+    if      (name == "clipboard")      g_queryProcessor->overrideQueryProvider(g_clipboardFinder);
+    else if (name == "unicode")        g_queryProcessor->overrideQueryProvider(g_unicodeFinder);
+    else if (name == "math")           g_queryProcessor->overrideQueryProvider(g_mathFinder);
+    else return false;
+    return true;
+}
+
 static std::pair<WP<IFinder>, bool> finderForPrefix(const char x) {
     static auto PDEFAULTFINDER = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:default_finder");
     static auto PDESKTOPPREFIX = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:desktop_prefix");

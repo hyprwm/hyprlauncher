@@ -6,15 +6,15 @@
 class CClipboardEntry : public IFinderResult {
   public:
     CClipboardEntry(const SClipboardHistoryItem& item, CClipboardManager* manager);
-    virtual ~CClipboardEntry() = default;
+    virtual ~CClipboardEntry() =  default;
 
-    virtual std::string     fuzzable();
-    virtual eFinderTypes    type();
-    virtual void            run();
-    virtual void            remove();
+    virtual const std::string&    fuzzable();
+    virtual eFinderTypes          type();
+    virtual void                  run();
+    virtual void                  remove();
 
-    std::string             m_sContent;
-    std::string             m_sOriginalLine;
-    CClipboardManager*      m_pManager;
+    std::string                   m_Content;
+    std::string                   m_OriginalLine;
+    CClipboardManager*            m_Manager;
 };
 

@@ -20,9 +20,9 @@ CConfigManager::CConfigManager() : m_inotifyFd(inotify_init()) {
     m_config->addConfigValue("finders:math_prefix", Hyprlang::STRING{"="});
     m_config->addConfigValue("finders:clipboard_prefix", Hyprlang::STRING{">"});
 
-    m_config->addConfigValue("clipboard:list_cmd", Hyprlang::STRING(&clipboardConfig.list_cmd));
-    m_config->addConfigValue("clipboard:copy_cmd", Hyprlang::STRING(&clipboardConfig.copy_cmd));
-    m_config->addConfigValue("clipboard:delete_cmd", Hyprlang::STRING(&clipboardConfig.delete_cmd));
+    m_config->addConfigValue("finders:clipboard:list_cmd", Hyprlang::STRING(&m_clipboardConfig.listCmd));
+    m_config->addConfigValue("finders:clipboard:copy_cmd", Hyprlang::STRING(&m_clipboardConfig.copyCmd));
+    m_config->addConfigValue("finders:clipboard:delete_cmd", Hyprlang::STRING(&m_clipboardConfig.deleteCmd));
 
     m_config->commence();
 

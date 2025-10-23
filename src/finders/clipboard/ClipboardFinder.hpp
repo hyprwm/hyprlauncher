@@ -12,7 +12,7 @@ class CClipboardFinder : public IFinder {
     void                               onConfigReload();
 
   private:
-    UP<CClipboardManager> m_pClipboardManager;
+    UP<CClipboardManager> m_ClipboardManager;
 };
 
 inline UP<CClipboardFinder> g_clipboardFinder;

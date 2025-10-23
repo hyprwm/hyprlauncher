@@ -5,8 +5,8 @@
 #include "../config/ConfigManager.hpp"
 
 struct SClipboardHistoryItem {
-  std::string original_line;
-  std::string display_line;
+  std::string originalLine;
+  std::string displayLine;
 };
 
 class CClipboardManager {
@@ -20,5 +20,5 @@ class CClipboardManager {
     void                      deleteItem(const std::string& item);
 
   private:
-    SClipboardConfig m_sConfig;
+    SClipboardConfig m_Config;
 };

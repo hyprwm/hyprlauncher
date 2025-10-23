@@ -1,10 +1,10 @@
 #include "ClipboardEntry.hpp"
 #include "../../helpers/Log.hpp"
 
-CClipboardEntry::CClipboardEntry(const SClipboardHistoryItem& item, CClipboardManager* manager) : m_sContent(item.display_line), m_sOriginalLine(item.original_line), m_pManager(manager) {}
+CClipboardEntry::CClipboardEntry(const SClipboardHistoryItem& item, CClipboardManager* manager) : m_Content(item.displayLine), m_OriginalLine(item.originalLine), m_Manager(manager) {}
 
-std::string CClipboardEntry::fuzzable() {
-    return m_sOriginalLine;
+const std::string& CClipboardEntry::fuzzable() {
+    return m_OriginalLine;
 }
 
 eFinderTypes CClipboardEntry::type() {
@@ -13,10 +13,10 @@ eFinderTypes CClipboardEntry::type() {
 
 void CClipboardEntry::run() {
     Debug::log(LOG, "Running clipboard entry: copying and pasting");
-    m_pManager->copyItem(m_sOriginalLine);
+    m_Manager->copyItem(m_OriginalLine);
 }
 
 void CClipboardEntry::remove() {
     Debug::log(LOG, "Removing clipboard entry from history");
-    m_pManager->deleteItem(m_sOriginalLine);
+    m_Manager->deleteItem(m_OriginalLine);
 }

@@ -35,14 +35,6 @@ static void printVersion() {
     std::cout << "Hyprlauncher v" << HYPRLAUNCHER_VERSION << std::endl;
 }
 
-static bool setProviderByName(const std::string& name) {
-    if      (name == "clipboard")      g_queryProcessor->overrideQueryProvider(g_clipboardFinder);
-    else if (name == "unicode")        g_queryProcessor->overrideQueryProvider(g_unicodeFinder);
-    else if (name == "math")           g_queryProcessor->overrideQueryProvider(g_mathFinder);
-    else return false;
-    return true;
-}
-
 int main(int argc, char** argv, char** envp) {
     signal(SIGPIPE, SIG_IGN);
     signal(SIGCHLD, SIG_IGN);
@@ -127,14 +119,14 @@ int main(int argc, char** argv, char** envp) {
         });
 
         if (it != explicitOptions.end()) {
-            setProviderByName(it->substr(0, it->size() - 5));
+            g_queryProcessor->setProviderByName(it->substr(0, it->size() - 5));
             explicitOptions.erase(it);
         } else {
             g_ipcFinder->setData(explicitOptions);
             g_queryProcessor->overrideQueryProvider(g_ipcFinder);
         }
     } else if (!provider.empty()) {
-        if (!setProviderByName(provider))
+        if (!g_queryProcessor->setProviderByName(provider))
             Debug::log(WARN, "Unknown provider '{}'. Using default.", provider);
     }
 

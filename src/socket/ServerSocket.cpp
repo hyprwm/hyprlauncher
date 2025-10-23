@@ -68,20 +68,14 @@ void CServerIPCSocket::openWithProvider(const std::string& provider, const std::
         return;
 
     Debug::log(LOG, "Request to open with provider: {}", provider);
-
-    if      (provider == "clipboard")     g_queryProcessor->overrideQueryProvider(g_clipboardFinder);
-    else if (provider == "unicode")       g_queryProcessor->overrideQueryProvider(g_unicodeFinder);
-    else if (provider == "math")          g_queryProcessor->overrideQueryProvider(g_mathFinder);
-    else if (provider == "ipc")           g_queryProcessor->overrideQueryProvider(g_ipcFinder);
-    else {
+    if(!g_queryProcessor->setProviderByName(provider)) {
         Debug::log(WARN, "Unknown provider requested via IPC: {}", provider);
         g_ui->setWindowOpen(true);
         return;
     }
 
-    if (!options.empty()) {
+    if (!options.empty())
         g_ipcFinder->setData(options);
-    }
 
     g_ui->setWindowOpen(true);
 }

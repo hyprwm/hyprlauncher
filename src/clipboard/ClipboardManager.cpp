@@ -1,6 +1,5 @@
 #include "ClipboardManager.hpp"
 #include <hyprutils/os/Process.hpp>
-#include <hyprutils/string/String.hpp>
 #include <iterator>
 #include "../helpers/Log.hpp"
 #include <ranges>
@@ -8,24 +7,22 @@
 
 using namespace Hyprutils::OS;
 
-struct SPipeDeleter {
-    void operator()(FILE* p) const {
-        if (p)
-            pclose(p);
-    }
-};
-
-CClipboardManager::CClipboardManager(const SClipboardConfig& config) : m_sConfig(config) {}
+CClipboardManager::CClipboardManager(const SClipboardConfig& config) : m_Config(config) {}
 
 static void executeCommand(const std::string& command, const std::string& arg) {
     if (command.empty())
         return;
 
-    std::string finalCommand   = command;
-    size_t      placeholderPos = finalCommand.find("{}");
+    bool hasPlaceholder = command.find('{') != std::string::npos;
 
-    if (placeholderPos != std::string::npos) {
-        finalCommand.replace(placeholderPos, 2, "\"$1\"");
+    if (hasPlaceholder) {
+        std::string finalCommand;
+        try {
+            finalCommand = std::vformat(command, std::make_format_args("\"$1\""));
+        } catch (const std::format_error& e) {
+            Debug::log(ERR, "Invalid format string in command: {}. Error: {}", command, e.what());
+            return;
+        }
         CProcess proc("/bin/sh", {"-c", finalCommand, "-", arg});
         proc.runAsync();
     } else if (!arg.empty()) {
@@ -39,14 +36,15 @@ static void executeCommand(const std::string& command, const std::string& arg) {
 }
 
 std::vector<SClipboardHistoryItem> CClipboardManager::getHistory() {
-    std::istringstream iss(m_sConfig.list_cmd);
-    std::vector<std::string> parts{
-        std::istream_iterator<std::string>{iss},
-        std::istream_iterator<std::string>{}
-    };
+    std::istringstream iss(m_Config.listCmd);
+    std::vector<std::string> parts;
+    std::string part;
+    while (iss >> part) {
+        parts.push_back(part);
+    }
 
     if (parts.empty()) {
-        Debug::log(ERR, "Empty list_cmd");
+        Debug::log(ERR, "Empty listCmd");
         return {};
     }
 
@@ -58,11 +56,11 @@ std::vector<SClipboardHistoryItem> CClipboardManager::getHistory() {
     const std::string errOut = proc.stdErr();
 
     if (!errOut.empty())
-        Debug::log(WARN, "list_cmd stderr: {}", errOut);
+        Debug::log(WARN, "listCmd stderr: {}", errOut);
 
     const int exitCode = proc.exitCode();
     if (exitCode != 0) {
-        Debug::log(ERR, "list_cmd exited with code {}: {}", exitCode, m_sConfig.list_cmd);
+        Debug::log(ERR, "listCmd exited with code {}: {}", exitCode, m_Config.listCmd);
         return {};
     }
     std::vector<SClipboardHistoryItem> history;
@@ -79,14 +77,14 @@ std::vector<SClipboardHistoryItem> CClipboardManager::getHistory() {
     return history;
 }
 
-void CClipboardManager::copyItem(const std::string& original_line) {
-    executeCommand(m_sConfig.copy_cmd, original_line);
+void CClipboardManager::copyItem(const std::string& originalLine) {
+    executeCommand(m_Config.copyCmd, originalLine);
 }
 
 void CClipboardManager::deleteItem(const std::string& item) {
-    executeCommand(m_sConfig.delete_cmd, item);
+    executeCommand(m_Config.deleteCmd, item);
 }
 
 SClipboardConfig CClipboardManager::getConfig() const {
-    return m_sConfig;
+    return m_Config;
 }
