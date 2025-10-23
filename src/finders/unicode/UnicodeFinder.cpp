@@ -17,7 +17,7 @@ class CUnicodeEntry : public IFinderResult {
     CUnicodeEntry()          = default;
     virtual ~CUnicodeEntry() = default;
 
-    virtual std::string fuzzable() {
+    virtual const std::string& fuzzable() {
         return m_fuzzable;
     }
 

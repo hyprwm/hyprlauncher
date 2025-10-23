@@ -33,7 +33,7 @@ class CDesktopEntry : public IFinderResult {
     CDesktopEntry()          = default;
     virtual ~CDesktopEntry() = default;
 
-    virtual std::string fuzzable() {
+    virtual const std::string& fuzzable() {
         return m_fuzzable;
     }
 

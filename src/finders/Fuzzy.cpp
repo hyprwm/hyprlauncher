@@ -4,82 +4,125 @@
 
 #include <unistd.h>
 
-static float jaroWinkler(const std::string& a, const std::string& b) {
-    const auto LENGTH_A = a.size();
-    const auto LENGTH_B = b.size();
-    if (LENGTH_A == 0 && LENGTH_B == 0)
-        return 1.F;
-    if (LENGTH_A == 0 || LENGTH_B == 0)
-        return 0.F;
+static float jaroWinkler(const std::string_view& a, const std::string_view& b) {
+    const auto LENGTH_A = a.length();
+    const auto LENGTH_B = b.length();
 
-    const auto        MATCH_DIST = (std::max(LENGTH_A, LENGTH_B) / 2) - 1;
+    if (!LENGTH_A && !LENGTH_B)
+        return 0;
 
-    std::vector<bool> matchesA(LENGTH_A, false);
-    std::vector<bool> matchesB(LENGTH_B, false);
+    const auto        MATCH_DISTANCE = LENGTH_A == 1 && LENGTH_B == 1 ? 0 : ((std::max(LENGTH_A, LENGTH_B) / 2) - 1);
 
-    size_t            matches = 0;
+    std::vector<bool> matchesA, matchesB;
+    matchesA.resize(LENGTH_A);
+    matchesB.resize(LENGTH_B);
+    size_t matches = 0;
     for (size_t i = 0; i < LENGTH_A; ++i) {
-        const size_t start = (i >= MATCH_DIST) ? i - MATCH_DIST : 0;
-        const size_t end   = std::min(i + MATCH_DIST + 1, LENGTH_B);
-        for (size_t j = start; j < end; ++j) {
-            if (matchesB[j])
+        const auto END = std::min(MATCH_DISTANCE + i + 1, LENGTH_B);
+        for (size_t j = (i > MATCH_DISTANCE ? (i - MATCH_DISTANCE) : 0); j < END; ++j) {
+            if (matchesB[j] || a[i] != b[j])
                 continue;
-            if (a[i] == b[j]) {
-                matchesA[i] = true;
-                matchesB[j] = true;
-                ++matches;
-                break;
-            }
+
+            matchesA[i] = true;
+            matchesB[j] = true;
+            ++matches;
         }
     }
-    if (!matches)
-        return 0.F;
 
-    size_t transps = 0;
-    for (size_t i = 0, j = 0; i < LENGTH_A; ++i) {
+    if (!matches)
+        return 0;
+
+    float  t = 0.F;
+    size_t k = 0;
+    for (size_t i = 0; i < LENGTH_A; ++i) {
         if (!matchesA[i])
             continue;
 
-        while (j < LENGTH_B && !matchesB[j]) {
-            ++j;
+        while (k < matchesB.size() && !matchesB[k]) {
+            ++k;
         }
 
-        if (j < LENGTH_B && a[i] != b[j])
-            ++transps;
+        if (a[i] != b[k])
+            t += 0.5F;
 
-        ++j;
+        ++k;
     }
-    const float m   = static_cast<float>(matches);
-    const float tps = static_cast<float>(transps) / 2.0f;
 
-    return (m / LENGTH_A + m / LENGTH_B + (m - tps) / m) / 3.0f;
+    return (sc<float>(matches) / LENGTH_A + sc<float>(matches) / LENGTH_B + (matches - t) / sc<float>(matches)) / 3.F;
 }
 
-static float jaroWinklerFull(const std::string& a, const std::string& b, float prefixScale = 0.1F, float substrScale = 0.4F) {
-    const float  JARO_RESULT = jaroWinkler(a, b);
-    size_t       prefixLen   = 0;
-    const size_t MAXPREFIX   = 4;
+constexpr const float BOOST_THRESHOLD = 0.69F;
+constexpr const float FREQ_SCALE      = 0.05F;
+constexpr const float PREFIX_SCALE    = 0.1F;
+constexpr const float SUBSTR_SCALE    = 0.05F;
 
-    while (prefixLen < std::min({a.size(), b.size(), MAXPREFIX}) && a[prefixLen] == b[prefixLen]) {
-        ++prefixLen;
+//
+static float jaroWinklerFull(const std::string_view& a, const std::string_view& b, float freq) {
+    float score = jaroWinkler(a, b);
+
+    // if the similarity is good enough, we can consider substr and prefix.
+    if (score > BOOST_THRESHOLD) {
+        size_t       prefixLen = 0;
+        const size_t MAXPREFIX = 4;
+
+        while (prefixLen < std::min({a.size(), b.size(), MAXPREFIX}) && a[prefixLen] == b[prefixLen]) {
+            ++prefixLen;
+        }
+
+        score += freq * FREQ_SCALE;
+
+        if (b.contains(a))
+            return score + (std::min(b.length(), sc<size_t>(4)) * SUBSTR_SCALE);
+        return score + (sc<float>(prefixLen) * PREFIX_SCALE);
     }
 
-    return JARO_RESULT + (sc<float>(prefixLen) * prefixScale * (1.F - JARO_RESULT)) + (b.contains(a) ? substrScale : 0.F);
+    return score;
 }
 
 struct SScoreData {
     float             score = 0.F;
     SP<IFinderResult> result;
+    size_t            idx = 0;
 };
 
 static void workerFn(std::vector<SScoreData>& scores, const std::vector<SP<IFinderResult>>& in, const std::string& query, size_t start, size_t end) {
     for (size_t i = start; i < end; ++i) {
         auto& ref  = scores[i];
-        ref.score  = jaroWinklerFull(query, in[i]->fuzzable()) + in[i]->frequency() * 0.05F;
+        ref.score  = jaroWinklerFull(query, in[i]->fuzzable(), in[i]->frequency());
         ref.result = in[i];
+        ref.idx    = i;
     }
 }
 
+static std::vector<SP<IFinderResult>> getBestResultsStable(std::vector<SScoreData>& data, size_t n) {
+    std::vector<SP<IFinderResult>> resVec;
+    resVec.resize(std::min(data.size(), n));
+
+    static auto getBestResult = [](std::vector<SScoreData>& data) -> typename std::vector<SScoreData>::iterator {
+        typename std::vector<SScoreData>::iterator result    = data.begin();
+        float                                      bestScore = 0.F;
+        for (auto it = data.begin(); it != data.end(); ++it) {
+            if (it->score > bestScore) {
+                bestScore = it->score;
+                result    = it;
+            }
+        }
+
+        return result;
+    };
+
+    for (size_t i = 0; i < n; ++i) {
+        auto it   = getBestResult(data);
+        it->score = 0.F; // reset, don't get it again
+        resVec[i] = it->result;
+    }
+
+    return resVec;
+}
+
+static constexpr const decltype(sysconf(0)) MAX_THREADS = 10;
+
+//
 std::vector<SP<IFinderResult>> Fuzzy::getNResults(const std::vector<SP<IFinderResult>>& in, const std::string& query, size_t results) {
     std::vector<SScoreData> scores;
     scores.resize(in.size());
@@ -88,16 +131,17 @@ std::vector<SP<IFinderResult>> Fuzzy::getNResults(const std::vector<SP<IFinderRe
     auto THREADS = sysconf(_SC_NPROCESSORS_ONLN);
     if (THREADS < 1)
         THREADS = 8;
+    THREADS = std::min(THREADS, MAX_THREADS);
 
     std::vector<std::thread> workerThreads;
     workerThreads.resize(THREADS);
     size_t workElDone = 0, workElPerThread = in.size() / THREADS;
     for (long i = 0; i < THREADS; ++i) {
         if (i == THREADS - 1) {
-            workerThreads[i] = std::thread([&] { workerFn(scores, in, query, workElDone, in.size()); });
+            workerThreads[i] = std::thread([&, begin = workElDone] { workerFn(scores, in, query, begin, in.size()); });
             break;
         } else
-            workerThreads[i] = std::thread([&] { workerFn(scores, in, query, workElDone, workElDone + workElPerThread); });
+            workerThreads[i] = std::thread([&, begin = workElDone, end = workElDone + workElPerThread] { workerFn(scores, in, query, begin, end); });
 
         workElDone += workElPerThread;
     }
@@ -109,14 +153,5 @@ std::vector<SP<IFinderResult>> Fuzzy::getNResults(const std::vector<SP<IFinderRe
 
     workerThreads.clear();
 
-    std::partial_sort(scores.begin(), scores.begin() + std::min(results, in.size()), scores.end(), [](const auto& a, const auto& b) { return a.score > b.score; });
-
-    std::vector<SP<IFinderResult>> resVec;
-    resVec.resize(std::min(in.size(), results));
-
-    for (size_t i = 0; i < resVec.size(); ++i) {
-        resVec[i] = scores[i].result;
-    }
-
-    return resVec;
+    return getBestResultsStable(scores, results);
 }

@@ -20,7 +20,7 @@ class CIPCEntry : public IFinderResult {
     CIPCEntry()          = default;
     virtual ~CIPCEntry() = default;
 
-    virtual std::string fuzzable() {
+    virtual const std::string& fuzzable() {
         return m_entry;
     }
 
