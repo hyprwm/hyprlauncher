@@ -1,4 +1,5 @@
 #include "ClientSocket.hpp"
+#include "../helpers/Log.hpp"
 
 #include <cstdlib>
 #include <print>
@@ -47,7 +48,7 @@ void CClientIPCSocket::sendOpen() {
     m_manager->sendSetOpenState(1 /* open */);
 }
 
-void CClientIPCSocket::sendOpenWithOptions(const std::vector<std::string>& opts) {
+void CClientIPCSocket::sendOpenWithProvider(const std::string& provider, const std::vector<std::string>& opts) {
     std::vector<const char*> optsC;
     optsC.reserve(opts.size());
     for (const auto& o : opts) {
@@ -68,10 +69,15 @@ void CClientIPCSocket::sendOpenWithOptions(const std::vector<std::string>& opts)
         m_canExit = true;
     });
 
-    m_manager->sendOpenWithOptions(optsC);
+    Debug::log(LOG, "Sending open with provider {}", provider);
+    m_manager->sendSetProviderWithOptions(provider.c_str(), optsC);
 
     while (!m_canExit && m_socket->dispatchEvents(true)) {
         // wait for selection
         ;
     }
+}
+
+void CClientIPCSocket::sendOpenWithOptions(const std::vector<std::string>& opts) {
+    sendOpenWithProvider("ipc", opts);
 }

@@ -15,6 +15,7 @@ class CQueryProcessor {
 
     void scheduleQueryUpdate(const std::string& str);
     void overrideQueryProvider(WP<IFinder> finder);
+    bool setProviderByName(const std::string& name);
 
   private:
     std::condition_variable m_threadCV;
