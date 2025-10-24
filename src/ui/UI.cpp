@@ -1,6 +1,7 @@
 #include "UI.hpp"
 #include "ResultButton.hpp"
 
+#include "../finders/clipboard/ClipboardEntry.hpp"
 #include "../finders/desktop/DesktopFinder.hpp"
 #include "../query/QueryProcessor.hpp"
 #include "../socket/ServerSocket.hpp"
@@ -89,6 +90,16 @@ CUI::CUI(bool open) : m_openByDefault(open) {
             updateActive();
         } else if (e.xkbKeysym == XKB_KEY_Return)
             onSelected();
+        else if (e.xkbKeysym == XKB_KEY_Delete) {
+            const auto& activeResult = m_currentResults.at(m_activeElementId).result;
+            if (activeResult->type() == FINDER_CLIPBOARD) {
+                const auto clipboardEntry = reinterpretPointerCast<CClipboardEntry>(activeResult);
+                if (clipboardEntry) {
+                    clipboardEntry->remove();
+                    g_queryProcessor->scheduleQueryUpdate("");
+                }
+            }
+        }
     });
 }
 

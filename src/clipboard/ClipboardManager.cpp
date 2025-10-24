@@ -27,7 +27,7 @@ static void executeCommand(const std::string& command, const std::string& arg) {
         proc.runAsync();
     } else if (!arg.empty()) {
         std::string shellCommand = "echo -n \"$1\" | " + command;
-        CProcess proc("/bin/sh", {"-c", shellCommand, "-", arg});
+        CProcess    proc("/bin/sh", {"-c", shellCommand, "-", arg});
         proc.runAsync();
     } else {
         CProcess proc("/bin/sh", {"-c", command});
@@ -36,21 +36,17 @@ static void executeCommand(const std::string& command, const std::string& arg) {
 }
 
 std::vector<SClipboardHistoryItem> CClipboardManager::getHistory() {
-    std::istringstream iss(m_Config.listCmd);
-    std::vector<std::string> parts;
-    std::string part;
-    while (iss >> part) {
-        parts.push_back(part);
-    }
+    std::istringstream       iss(m_Config.listCmd);
+    std::vector<std::string> parts{std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{}};
 
     if (parts.empty()) {
         Debug::log(ERR, "Empty listCmd");
         return {};
     }
 
-    const std::string& binary = parts.front();
+    const std::string&       binary = parts.front();
     std::vector<std::string> args(parts.begin() + 1, parts.end());
-    CProcess proc(binary, args);
+    CProcess                 proc(binary, args);
     proc.runSync();
     const std::string output = proc.stdOut();
     const std::string errOut = proc.stdErr();
@@ -64,15 +60,14 @@ std::vector<SClipboardHistoryItem> CClipboardManager::getHistory() {
         return {};
     }
     std::vector<SClipboardHistoryItem> history;
-    for (const auto && line_view : std::ranges::views::split(output, '\n')) {
+    for (auto&& line_view : std::ranges::views::split(output, '\n')) {
         std::string line{line_view.begin(), line_view.end()};
-        if (line.empty()) continue;
+        if (line.empty())
+            continue;
 
-        const auto tabPos = line.find('\t');
-        std::string_view display = (tabPos != std::string::npos)
-            ? std::string_view(line).substr(tabPos + 1)
-            : std::string_view(line);
-        history.push_back({line, std::string(display)});
+        const auto  tabPos  = line.find('\t');
+        std::string display = (tabPos != std::string::npos) ? line.substr(tabPos + 1) : line;
+        history.emplace_back(line, std::string(display));
     }
     return history;
 }

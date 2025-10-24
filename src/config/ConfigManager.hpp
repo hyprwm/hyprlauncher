@@ -10,8 +10,8 @@
 
 struct SClipboardConfig {
     std::string listCmd   = "cliphist list";
-    std::string copyCmd   = "cliphist decode | wl-copy";
-    std::string deleteCmd = "cliphist delete {0}";
+    std::string copyCmd   = "cliphist decode \"{}\" | wl-copy";
+    std::string deleteCmd = "cliphist delete";
 };
 
 class CConfigManager {
