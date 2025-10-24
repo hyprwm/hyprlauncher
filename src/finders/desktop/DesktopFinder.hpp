@@ -26,6 +26,8 @@ class CDesktopFinder : public IFinder {
     std::vector<std::string>       m_desktopEntryPaths;
     std::vector<int>               m_watches;
 
+    std::vector<std::string>       m_envPaths;
+
     UP<CEntryCache>                m_entryFrequencyCache;
 
     void                           cacheEntry(const std::string& path);

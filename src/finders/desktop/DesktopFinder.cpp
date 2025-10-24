@@ -2,6 +2,7 @@
 #include "../../helpers/Log.hpp"
 #include "../Fuzzy.hpp"
 #include "../Cache.hpp"
+#include "../../config/ConfigManager.hpp"
 
 #include <algorithm>
 #include <filesystem>
@@ -11,6 +12,7 @@
 
 #include <hyprutils/string/String.hpp>
 #include <hyprutils/os/Process.hpp>
+#include <hyprutils/string/ConstVarList.hpp>
 
 using namespace Hyprutils::String;
 using namespace Hyprutils::OS;
@@ -46,13 +48,17 @@ class CDesktopEntry : public IFinderResult {
     }
 
     virtual void run() {
-        Debug::log(TRACE, "Running {}", m_exec);
+        static auto            PLAUNCHPREFIX = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:desktop_launch_prefix");
+        const std::string_view LAUNCH_PREFIX = *PLAUNCHPREFIX;
+
+        auto                   toExec = std::format("{}{}", LAUNCH_PREFIX.empty() ? std::string{""} : std::string{LAUNCH_PREFIX} + std::string{" "}, m_exec);
+
+        Debug::log(TRACE, "Running {}", toExec);
 
         g_desktopFinder->m_entryFrequencyCache->incrementCachedEntry(m_fuzzable);
         m_frequency = g_desktopFinder->m_entryFrequencyCache->getCachedEntry(m_fuzzable);
 
         // replace all funky codes with nothing
-        auto toExec = m_exec;
         replaceInString(toExec, "%U", "");
         replaceInString(toExec, "%f", "");
         replaceInString(toExec, "%F", "");
@@ -90,7 +96,23 @@ static std::string resolvePath(std::string p) {
 }
 
 CDesktopFinder::CDesktopFinder() : m_inotifyFd(inotify_init()), m_entryFrequencyCache(makeUnique<CEntryCache>("desktop")) {
-    ;
+    const auto ENV = getenv("XDG_DATA_DIRS");
+    if (!ENV)
+        return;
+
+    CConstVarList paths(ENV, 0, ':', false);
+
+    for (const auto& p : paths) {
+        const auto      PTH = std::string{p} + "/applications";
+        std::error_code ec;
+        if (!std::filesystem::exists(PTH, ec) || ec)
+            continue;
+
+        if (std::ranges::contains(DESKTOP_ENTRY_PATHS, PTH))
+            continue;
+
+        m_envPaths.emplace_back(PTH);
+    }
 }
 
 void CDesktopFinder::init() {
@@ -109,11 +131,11 @@ void CDesktopFinder::recache() {
     m_desktopEntryCache.clear();
     m_desktopEntryCacheGeneric.clear();
 
-    for (const auto& PATH : DESKTOP_ENTRY_PATHS) {
+    auto cachePath = [this](const std::string& p) {
         std::error_code ec;
-        auto            it = std::filesystem::directory_iterator(resolvePath(PATH), ec);
+        auto            it = std::filesystem::directory_iterator(resolvePath(p), ec);
         if (ec)
-            continue;
+            return;
         for (const auto& e : it) {
             if (!e.is_regular_file(ec) || ec)
                 continue;
@@ -121,7 +143,14 @@ void CDesktopFinder::recache() {
             cacheEntry(e.path().string());
         }
 
-        m_desktopEntryPaths.emplace_back(resolvePath(PATH));
+        m_desktopEntryPaths.emplace_back(resolvePath(p));
+    };
+
+    for (const auto& PATH : DESKTOP_ENTRY_PATHS) {
+        cachePath(PATH);
+    }
+    for (const auto& PATH : m_envPaths) {
+        cachePath(PATH);
     }
 }
 
@@ -164,7 +193,10 @@ void CDesktopFinder::cacheEntry(const std::string& path) {
     const auto& DATA = *READ_RESULT;
 
     auto        extract = [&DATA](const std::string_view what) -> std::string_view {
-        size_t begins = DATA.find("\n" + std::string{what});
+        size_t begins = DATA.find("\n" + std::string{what} + " ");
+
+        if (begins == std::string::npos)
+            begins = DATA.find("\n" + std::string{what} + "=");
 
         if (begins == std::string::npos)
             return "";

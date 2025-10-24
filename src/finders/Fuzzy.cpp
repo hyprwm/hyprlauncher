@@ -127,31 +127,36 @@ std::vector<SP<IFinderResult>> Fuzzy::getNResults(const std::vector<SP<IFinderRe
     std::vector<SScoreData> scores;
     scores.resize(in.size());
 
-    // to analyze scores, run this op in parallel
-    auto THREADS = sysconf(_SC_NPROCESSORS_ONLN);
-    if (THREADS < 1)
-        THREADS = 8;
-    THREADS = std::min(THREADS, MAX_THREADS);
+    if (in.size() > 100) {
+        // If we have more than 100 elements, we can run this in threads.
+        // For smaller sets this doesn't make much sense
+        // Value 100 was picked because I felt like it's a good one™.
+        auto THREADS = sysconf(_SC_NPROCESSORS_ONLN);
+        if (THREADS < 1)
+            THREADS = 8;
+        THREADS = std::min(THREADS, MAX_THREADS);
 
-    std::vector<std::thread> workerThreads;
-    workerThreads.resize(THREADS);
-    size_t workElDone = 0, workElPerThread = in.size() / THREADS;
-    for (long i = 0; i < THREADS; ++i) {
-        if (i == THREADS - 1) {
-            workerThreads[i] = std::thread([&, begin = workElDone] { workerFn(scores, in, query, begin, in.size()); });
-            break;
-        } else
-            workerThreads[i] = std::thread([&, begin = workElDone, end = workElDone + workElPerThread] { workerFn(scores, in, query, begin, end); });
+        std::vector<std::thread> workerThreads;
+        workerThreads.resize(THREADS);
+        size_t workElDone = 0, workElPerThread = in.size() / THREADS;
+        for (long i = 0; i < THREADS; ++i) {
+            if (i == THREADS - 1) {
+                workerThreads[i] = std::thread([&, begin = workElDone] { workerFn(scores, in, query, begin, in.size()); });
+                break;
+            } else
+                workerThreads[i] = std::thread([&, begin = workElDone, end = workElDone + workElPerThread] { workerFn(scores, in, query, begin, end); });
 
-        workElDone += workElPerThread;
-    }
+            workElDone += workElPerThread;
+        }
 
-    for (auto& t : workerThreads) {
-        if (t.joinable())
-            t.join();
-    }
+        for (auto& t : workerThreads) {
+            if (t.joinable())
+                t.join();
+        }
 
-    workerThreads.clear();
+        workerThreads.clear();
+    } else
+        workerFn(scores, in, query, 0, in.size());
 
     return getBestResultsStable(scores, results);
 }
