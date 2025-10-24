@@ -193,7 +193,10 @@ void CDesktopFinder::cacheEntry(const std::string& path) {
     const auto& DATA = *READ_RESULT;
 
     auto        extract = [&DATA](const std::string_view what) -> std::string_view {
-        size_t begins = DATA.find("\n" + std::string{what});
+        size_t begins = DATA.find("\n" + std::string{what} + " ");
+
+        if (begins == std::string::npos)
+            begins = DATA.find("\n" + std::string{what} + "=");
 
         if (begins == std::string::npos)
             return "";
