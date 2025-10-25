@@ -19,6 +19,7 @@ static void printHelp() {
     std::cout << "Hyprlauncher usage: hyprlauncher [arg [...]].\n\nArguments:\n"
               << " -d | --daemon              | Do not open after initializing\n"
               << " -o | --options \"a,b,c\"   | Pass an explicit option array\n"
+              << " -m | --dmenu               | Pass an option list in dmenu-style (stdin, newline-separated)\n"
               << " -h | --help                | Print this menu\n"
               << " -v | --version             | Print version info\n"
               << "    | --quiet               | Disable all logging\n"
@@ -30,9 +31,20 @@ static void printVersion() {
     std::cout << "Hyprlauncher v" << HYPRLAUNCHER_VERSION << std::endl;
 }
 
+static std::vector<std::string> parseExplicitFromStdin() {
+    Debug::log(TRACE, "Parsing stdin for dmenu mode");
+    std::vector<std::string> result;
+    std::string              line;
+    while (std::getline(std::cin, line)) {
+        result.emplace_back(std::move(line));
+    }
+    Debug::log(TRACE, "Read {} options from stdin", result.size());
+    return result;
+}
+
 int main(int argc, char** argv, char** envp) {
 
-    bool                     openByDefault = true;
+    bool                     openByDefault = true, dmenuMode = false;
     std::vector<std::string> explicitOptions;
 
     for (int i = 1; i < argc; ++i) {
@@ -53,6 +65,9 @@ int main(int argc, char** argv, char** envp) {
         } else if (sv == "-v" || sv == "--version") {
             printVersion();
             return 0;
+        } else if (sv == "-m" || sv == "--dmenu") {
+            dmenuMode = true;
+            continue;
         } else if (sv == "-o" || sv == "--options") {
             if (i + 1 >= argc) {
                 Debug::log(ERR, "Missing argument for --options", sv);
@@ -70,6 +85,9 @@ int main(int argc, char** argv, char** envp) {
     }
 
     auto socket = makeShared<CClientIPCSocket>();
+
+    if (dmenuMode)
+        explicitOptions = parseExplicitFromStdin();
 
     if (socket->m_connected) {
         Debug::log(TRACE, "Active instance already, opening launcher.");
