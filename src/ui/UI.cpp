@@ -164,8 +164,7 @@ void CUI::updateResults(std::vector<SFinderResult>&& results) {
         m_resultButtons[i]->setLabel(m_currentResults.size() <= i ? "" : m_currentResults[i].label);
     }
 
-    if (m_resultButtons.size() > 0)
-        m_resultButtons[m_activeElementId]->setActive(true);
+    updateActive();
 }
 
 void CUI::updateActive() {
