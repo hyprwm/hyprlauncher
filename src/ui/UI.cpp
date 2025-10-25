@@ -47,7 +47,7 @@ CUI::CUI(bool open) : m_openByDefault(open) {
     m_hr->setPositionFlag(Hyprtoolkit::IElement::HT_POSITION_FLAG_HCENTER, true);
 
     m_scrollArea = Hyprtoolkit::CScrollAreaBuilder::begin()
-                       ->size({Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, Hyprtoolkit::CDynamicSize::HT_SIZE_ABSOLUTE, {1.F, 1.F}})
+                       ->size({Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, Hyprtoolkit::CDynamicSize::HT_SIZE_ABSOLUTE, {1.F, 10.F}})
                        ->scrollY(true)
                        ->commence();
     m_scrollArea->setGrow(true);
@@ -97,7 +97,8 @@ CUI::~CUI() = default;
 void CUI::run() {
     m_resultButtons.reserve(MAX_RESULTS_IN_LAUNCHER);
     for (size_t i = 0; i < MAX_RESULTS_IN_LAUNCHER; ++i) {
-        auto b = m_resultButtons.emplace_back(makeShared<CResultButton>());
+        auto b     = m_resultButtons.emplace_back(makeShared<CResultButton>());
+        b->m_added = true;
         m_resultsLayout->addChild(b->m_background);
     }
 
@@ -169,6 +170,24 @@ void CUI::updateResults(std::vector<SFinderResult>&& results) {
 
 void CUI::updateActive() {
     for (size_t i = 0; i < m_resultButtons.size(); ++i) {
-        m_resultButtons[i]->setActive(i == m_activeElementId);
+        auto& b = m_resultButtons[i];
+        b->setActive(i == m_activeElementId);
+        if (i >= m_currentResults.size() && b->m_added)
+            m_resultsLayout->removeChild(b->m_background);
+        else if (i < m_currentResults.size() && !b->m_added)
+            m_resultsLayout->addChild(b->m_background);
+        b->m_added = i < m_currentResults.size();
     }
+
+    // fit the scroll area
+    const float CURRENT_SCROLL_Y = m_scrollArea->getCurrentScroll().y;
+    const float BUTTON_HEIGHT    = m_resultButtons[0]->m_background->size().y + 2 /* gap */;
+
+    const float MIN_SCROLL_TO_SEE = (BUTTON_HEIGHT * (m_activeElementId + 1)) - (m_scrollArea->size().y);
+    const float MAX_SCROLL_TO_SEE = (BUTTON_HEIGHT * m_activeElementId);
+
+    if (MAX_SCROLL_TO_SEE <= MIN_SCROLL_TO_SEE)
+        return; // wtf??
+
+    m_scrollArea->setScroll({0.F, std::clamp(CURRENT_SCROLL_Y, MIN_SCROLL_TO_SEE, MAX_SCROLL_TO_SEE)});
 }

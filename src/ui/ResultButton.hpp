@@ -24,6 +24,8 @@ class CResultButton {
     SP<Hyprtoolkit::CNullElement>      m_container;
     SP<Hyprtoolkit::CTextElement>      m_label;
 
+    bool                               m_added = false;
+
     void                               setActive(bool active);
     void                               setLabel(const std::string& x);
 
