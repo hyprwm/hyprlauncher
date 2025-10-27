@@ -18,7 +18,7 @@ constexpr const size_t MAX_RESULTS_IN_LAUNCHER = 25;
 CUI::CUI(bool open) : m_openByDefault(open) {
     static auto PGRABFOCUS = Hyprlang::CSimpleConfigValue<Hyprlang::INT>(g_configManager->m_config.get(), "general:grab_focus");
 
-    m_backend = Hyprtoolkit::CBackend::create();
+    m_backend = Hyprtoolkit::IBackend::create();
 
     m_background = Hyprtoolkit::CRectangleBuilder::begin()
                        ->color([this] { return m_backend->getPalette()->m_colors.background; })
