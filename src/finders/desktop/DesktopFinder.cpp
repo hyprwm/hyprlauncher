@@ -103,7 +103,10 @@ CDesktopFinder::CDesktopFinder() : m_inotifyFd(inotify_init()), m_entryFrequency
     CConstVarList paths(ENV, 0, ':', false);
 
     for (const auto& p : paths) {
-        const auto      PTH = std::string{p} + "/applications";
+        std::filesystem::path applications_path(p);
+        applications_path /= "applications";
+
+        const auto      PTH = applications_path.string();
         std::error_code ec;
         if (!std::filesystem::exists(PTH, ec) || ec)
             continue;
