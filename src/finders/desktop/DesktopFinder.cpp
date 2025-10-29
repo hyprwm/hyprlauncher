@@ -80,10 +80,7 @@ class CDesktopEntry : public IFinderResult {
     uint32_t    m_frequency = 0;
 };
 
-static constexpr std::array<const char*, 3> DESKTOP_ENTRY_PATHS = {"/usr/local/share/applications", "/usr/share/applications", "~/.local/share/applications"};
-
-//
-static std::string resolvePath(std::string p) {
+static std::filesystem::path resolvePath(const std::string& p) {
     if (p[0] != '~')
         return p;
 
@@ -92,8 +89,10 @@ static std::string resolvePath(std::string p) {
     if (!HOME)
         return "";
 
-    return HOME + p.substr(1);
+    return std::filesystem::path(HOME) / p.substr(2);
 }
+
+static const std::array<std::filesystem::path, 3> DESKTOP_ENTRY_PATHS = {"/usr/local/share/applications", "/usr/share/applications", resolvePath("~/.local/share/applications")};
 
 CDesktopFinder::CDesktopFinder() : m_inotifyFd(inotify_init()), m_entryFrequencyCache(makeUnique<CEntryCache>("desktop")) {
     const auto ENV = getenv("XDG_DATA_DIRS");
@@ -103,8 +102,8 @@ CDesktopFinder::CDesktopFinder() : m_inotifyFd(inotify_init()), m_entryFrequency
     CConstVarList paths(ENV, 0, ':', false);
 
     for (const auto& p : paths) {
-        const auto      PTH = std::string{p} + "/applications";
-        std::error_code ec;
+        const std::filesystem::path PTH = std::filesystem::path(p) / "applications";
+        std::error_code             ec;
         if (!std::filesystem::exists(PTH, ec) || ec)
             continue;
 
