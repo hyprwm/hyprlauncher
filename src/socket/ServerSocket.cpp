@@ -2,9 +2,14 @@
 #include "../ui/UI.hpp"
 #include "../query/QueryProcessor.hpp"
 #include "../finders/ipc/IPCFinder.hpp"
+#include "../helpers/Log.hpp"
+#include "../finders/clipboard/ClipboardFinder.hpp"
+#include "../finders/math/MathFinder.hpp"
+#include "../finders/unicode/UnicodeFinder.hpp"
 
 #include <cstdlib>
 #include <filesystem>
+#include <map>
 
 constexpr const char*            SOCKET_NAME = ".hyprlauncher.sock";
 
@@ -30,7 +35,9 @@ CServerIPCSocket::CServerIPCSocket() {
         auto manager = m_managers.emplace_back(makeShared<CHyprlauncherCoreManagerObject>(std::move(obj)));
 
         manager->setSetOpenState([this](uint32_t state) { setOpenState(state); });
-        manager->setOpenWithOptions([this](std::vector<const char*> state) { openWithOptions(state); });
+        manager->setOpenWithOptions([this](std::vector<const char*> state) { openWithProvider("ipc", state); });
+
+        manager->setSetProviderWithOptions([this](const char* provider, std::vector<const char*> options) { openWithProvider(provider, options); });
 
         manager->setGetInfoObject([this, m = WP<CHyprlauncherCoreManagerObject>{manager}](uint32_t seq) {
             if (!m)
@@ -54,6 +61,23 @@ void CServerIPCSocket::setOpenState(uint32_t state) {
         case 2: g_ui->setWindowOpen(false); break;
         default: break;
     }
+}
+
+void CServerIPCSocket::openWithProvider(const std::string& provider, const std::vector<const char*>& options) {
+    if (g_ui->windowOpen())
+        return;
+
+    Debug::log(LOG, "Request to open with provider: {}", provider);
+    if(!g_queryProcessor->setProviderByName(provider)) {
+        Debug::log(WARN, "Unknown provider requested via IPC: {}", provider);
+        g_ui->setWindowOpen(true);
+        return;
+    }
+
+    if (!options.empty())
+        g_ipcFinder->setData(options);
+
+    g_ui->setWindowOpen(true);
 }
 
 void CServerIPCSocket::openWithOptions(const std::vector<const char*>& options) {

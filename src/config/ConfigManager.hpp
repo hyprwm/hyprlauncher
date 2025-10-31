@@ -8,6 +8,12 @@
 
 #include <hyprutils/os/FileDescriptor.hpp>
 
+struct SClipboardConfig {
+    std::string listCmd   = "cliphist list";
+    std::string copyCmd   = "cliphist decode \"{}\" | wl-copy";
+    std::string deleteCmd = "cliphist delete";
+};
+
 class CConfigManager {
   public:
     CConfigManager();
@@ -19,6 +25,7 @@ class CConfigManager {
     Hyprutils::OS::CFileDescriptor m_inotifyFd;
     std::vector<int>               m_watches;
     std::string                    m_configPath;
+    SClipboardConfig               m_clipboardConfig;
 
     void                           replantWatch();
 };
