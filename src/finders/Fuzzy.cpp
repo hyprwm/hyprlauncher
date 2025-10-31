@@ -100,9 +100,9 @@ static std::vector<SP<IFinderResult>> getBestResultsStable(std::vector<SScoreDat
 
     static auto getBestResult = [](std::vector<SScoreData>& data) -> typename std::vector<SScoreData>::iterator {
         typename std::vector<SScoreData>::iterator result    = data.begin();
-        float                                      bestScore = 0.F;
+        float                                      bestScore = -1.F;
         for (auto it = data.begin(); it != data.end(); ++it) {
-            if (it->score > bestScore) {
+            if (it->score > bestScore && it->score >= 0.F) {
                 bestScore = it->score;
                 result    = it;
             }
@@ -111,9 +111,9 @@ static std::vector<SP<IFinderResult>> getBestResultsStable(std::vector<SScoreDat
         return result;
     };
 
-    for (size_t i = 0; i < n; ++i) {
+    for (size_t i = 0; i < std::min(data.size(), n); ++i) {
         auto it   = getBestResult(data);
-        it->score = 0.F; // reset, don't get it again
+        it->score = -1.F; // reset, don't get it again
         resVec[i] = it->result;
     }
 
