@@ -18,19 +18,20 @@ static float jaroWinkler(const std::string_view& a, const std::string_view& b) {
     matchesB.resize(LENGTH_B);
     size_t matches = 0;
     for (size_t i = 0; i < LENGTH_A; ++i) {
-        const auto END = std::min(MATCH_DISTANCE + i + 1, LENGTH_B);
-        for (size_t j = (i > MATCH_DISTANCE ? (i - MATCH_DISTANCE) : 0); j < END; ++j) {
+        const size_t start = (i > MATCH_DISTANCE ? i - MATCH_DISTANCE : 0);
+        const size_t end   = std::min(i + MATCH_DISTANCE + 1, LENGTH_B);
+        for (size_t j = start; j < end; ++j) {
             if (matchesB[j] || a[i] != b[j])
                 continue;
-
             matchesA[i] = true;
             matchesB[j] = true;
             ++matches;
+            break;
         }
     }
 
     if (!matches)
-        return 0;
+        return 0.F;
 
     float  t = 0.F;
     size_t k = 0;
@@ -51,7 +52,7 @@ static float jaroWinkler(const std::string_view& a, const std::string_view& b) {
     return (sc<float>(matches) / LENGTH_A + sc<float>(matches) / LENGTH_B + (matches - t) / sc<float>(matches)) / 3.F;
 }
 
-constexpr const float BOOST_THRESHOLD = 0.69F;
+constexpr const float BOOST_THRESHOLD = 0.221F;
 constexpr const float FREQ_SCALE      = 0.05F;
 constexpr const float PREFIX_SCALE    = 0.1F;
 constexpr const float SUBSTR_SCALE    = 0.05F;
@@ -72,8 +73,8 @@ static float jaroWinklerFull(const std::string_view& a, const std::string_view& 
         score += freq * FREQ_SCALE;
 
         if (b.contains(a))
-            return score + (std::min(b.length(), sc<size_t>(4)) * SUBSTR_SCALE);
-        return score + (sc<float>(prefixLen) * PREFIX_SCALE);
+            return score + (std::min(b.length(), sc<size_t>(4)) * SUBSTR_SCALE * (1.F - score));
+        return score + (sc<float>(prefixLen) * PREFIX_SCALE * (1.F - score));
     }
 
     return score;
