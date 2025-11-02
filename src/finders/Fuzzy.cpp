@@ -52,7 +52,7 @@ static float jaroWinkler(const std::string_view& a, const std::string_view& b) {
     return (sc<float>(matches) / LENGTH_A + sc<float>(matches) / LENGTH_B + (matches - t) / sc<float>(matches)) / 3.F;
 }
 
-constexpr const float BOOST_THRESHOLD = 0.221F;
+constexpr const float BOOST_THRESHOLD = 0.65F;
 constexpr const float FREQ_SCALE      = 0.05F;
 constexpr const float PREFIX_SCALE    = 0.1F;
 constexpr const float SUBSTR_SCALE    = 0.05F;
@@ -62,19 +62,20 @@ static float jaroWinklerFull(const std::string_view& a, const std::string_view& 
     float score = jaroWinkler(a, b);
 
     // if the similarity is good enough, we can consider substr and prefix.
-    if (score > BOOST_THRESHOLD) {
+    if (score > BOOST_THRESHOLD || b.contains(a)) {
         size_t       prefixLen = 0;
-        const size_t MAXPREFIX = 4;
+        const size_t MAXPREFIX = 20;
 
         while (prefixLen < std::min({a.size(), b.size(), MAXPREFIX}) && a[prefixLen] == b[prefixLen]) {
             ++prefixLen;
         }
 
-        score += freq * FREQ_SCALE;
+        if (!prefixLen && b.contains(a))
+            score += (std::min(b.length(), sc<size_t>(4)) * SUBSTR_SCALE * (1.F - score));
+        if (prefixLen)
+            score += (sc<float>(prefixLen) * PREFIX_SCALE * (1.F - score));
 
-        if (b.contains(a))
-            return score + (std::min(b.length(), sc<size_t>(4)) * SUBSTR_SCALE * (1.F - score));
-        return score + (sc<float>(prefixLen) * PREFIX_SCALE * (1.F - score));
+        score += freq * FREQ_SCALE * (1.F - score);
     }
 
     return score;
