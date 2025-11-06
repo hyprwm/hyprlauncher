@@ -30,6 +30,9 @@ class CResultButton {
     void                               setLabel(const std::string& x);
 
   private:
-    bool        m_active    = false;
-    std::string m_lastLabel = "";
+    void        updatedFontSize();
+
+    bool        m_active       = false;
+    int         m_lastFontSize = 0.F;
+    std::string m_lastLabel    = "";
 };
