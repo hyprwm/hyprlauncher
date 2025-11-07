@@ -92,25 +92,19 @@ static std::filesystem::path resolvePath(const std::string& p) {
     return std::filesystem::path(HOME) / p.substr(2);
 }
 
-static const std::array<std::filesystem::path, 3> DESKTOP_ENTRY_PATHS = {"/usr/local/share/applications", "/usr/share/applications", resolvePath("~/.local/share/applications")};
-
 CDesktopFinder::CDesktopFinder() : m_inotifyFd(inotify_init()), m_entryFrequencyCache(makeUnique<CEntryCache>("desktop")) {
-    const auto ENV = getenv("XDG_DATA_DIRS");
-    if (!ENV)
-        return;
+    if (const auto DATA_HOME = getenv("XDG_DATA_HOME"))
+        m_envPaths.emplace_back(std::filesystem::path(DATA_HOME) / "applications");
+    else
+        m_envPaths.emplace_back(resolvePath("~/.local/share/applications"));
 
-    CConstVarList paths(ENV, 0, ':', false);
-
-    for (const auto& p : paths) {
-        const std::filesystem::path PTH = std::filesystem::path(p) / "applications";
-        std::error_code             ec;
-        if (!std::filesystem::exists(PTH, ec) || ec)
-            continue;
-
-        if (std::ranges::contains(DESKTOP_ENTRY_PATHS, PTH))
-            continue;
-
-        m_envPaths.emplace_back(PTH);
+    if (const auto DATA_DIRS = getenv("XDG_DATA_DIRS")) {
+        CConstVarList paths(DATA_DIRS, 0, ':', false);
+        for (const auto& p : paths)
+            m_envPaths.emplace_back(std::filesystem::path(p) / "applications");
+    } else {
+        m_envPaths.emplace_back("/usr/local/share/applications");
+        m_envPaths.emplace_back("/usr/share/applications");
     }
 }
 
@@ -130,11 +124,11 @@ void CDesktopFinder::recache() {
     m_desktopEntryCache.clear();
     m_desktopEntryCacheGeneric.clear();
 
-    auto cachePath = [this](const std::string& p) {
+    for (const auto& PATH : m_envPaths) {
         std::error_code ec;
-        auto            it = std::filesystem::directory_iterator(resolvePath(p), ec);
+        auto            it = std::filesystem::directory_iterator(PATH, ec);
         if (ec)
-            return;
+            continue;
         for (const auto& e : it) {
             if (!e.is_regular_file(ec) || ec)
                 continue;
@@ -142,14 +136,7 @@ void CDesktopFinder::recache() {
             cacheEntry(e.path().string());
         }
 
-        m_desktopEntryPaths.emplace_back(resolvePath(p));
-    };
-
-    for (const auto& PATH : DESKTOP_ENTRY_PATHS) {
-        cachePath(PATH);
-    }
-    for (const auto& PATH : m_envPaths) {
-        cachePath(PATH);
+        m_desktopEntryPaths.emplace_back(PATH);
     }
 }
 
