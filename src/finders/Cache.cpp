@@ -15,17 +15,18 @@ using namespace Hyprutils::Memory;
 constexpr const size_t CACHE_MAX_SIZE = 512;
 
 CEntryCache::CEntryCache(const std::string& name) {
-    std::error_code ec;
-    if (const auto XDG_CACHE_HOME = getenv("XDG_CACHE_HOME")) {
-        if (!std::filesystem::exists(XDG_CACHE_HOME + std::string{"/hyprlauncher"}, ec) || ec)
-            std::filesystem::create_directories(XDG_CACHE_HOME + std::string{"/hyprlauncher"});
-        m_cacheFullPath = XDG_CACHE_HOME + std::string{"/hyprlauncher/" + name + ".cache"};
-    } else if (const auto HOME = getenv("HOME")) {
-        if (!std::filesystem::exists(HOME + std::string{"/.cache/hyprlauncher"}, ec) || ec)
-            std::filesystem::create_directories(HOME + std::string{"/.cache/hyprlauncher"});
-        m_cacheFullPath = HOME + std::string{"/.cache/hyprlauncher/" + name + ".cache"};
-    } else
+    std::filesystem::path cacheDirectory;
+    if (const auto XDG_DATA_HOME = getenv("XDG_DATA_HOME"); XDG_DATA_HOME && XDG_DATA_HOME[0] != '\0')
+        cacheDirectory = std::filesystem::path{XDG_DATA_HOME} / "hyprlauncher";
+    else if (const auto HOME = getenv("HOME"))
+        cacheDirectory = std::filesystem::path{HOME} / ".local" / "share" / "hyprlauncher";
+    else
         return;
+
+    std::error_code ec;
+    if (!std::filesystem::is_directory(cacheDirectory, ec) || ec)
+        std::filesystem::create_directories(cacheDirectory);
+    m_cacheFullPath = cacheDirectory / (name + ".cache");
 
     // load cache
     std::ifstream ifs(m_cacheFullPath);
