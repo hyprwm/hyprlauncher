@@ -53,7 +53,7 @@ static float jaroWinkler(const std::string_view& query, const std::string_view& 
 }
 
 constexpr const float BOOST_THRESHOLD = 0.65F;
-constexpr const float FREQ_SCALE      = 0.05F;
+constexpr const float FREQ_SCALE      = 0.03F;
 constexpr const float PREFIX_SCALE    = 0.05F;
 constexpr const float SUBSTR_SCALE    = 0.2F;
 
