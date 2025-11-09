@@ -51,7 +51,7 @@ void CIPCFinder::setData(const std::vector<const char*>& data) {
     for (const auto& s : data) {
         auto e = m_entries.emplace_back(makeShared<CIPCEntry>());
         m_entriesGeneric.emplace_back(e);
-        e->m_entry = s;
+        e->m_entry    = s;
         e->m_fuzzable = s;
         std::ranges::transform(e->m_fuzzable, e->m_fuzzable.begin(), ::tolower);
     }
@@ -63,7 +63,7 @@ void CIPCFinder::setData(const std::vector<std::string>& data) {
     for (const auto& s : data) {
         auto e = m_entries.emplace_back(makeShared<CIPCEntry>());
         m_entriesGeneric.emplace_back(e);
-        e->m_entry = s;
+        e->m_entry    = s;
         e->m_fuzzable = s;
         std::ranges::transform(e->m_fuzzable, e->m_fuzzable.begin(), ::tolower);
     }

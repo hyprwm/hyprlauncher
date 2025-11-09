@@ -10,6 +10,7 @@
 #include <hyprtoolkit/element/Button.hpp>
 #include <hyprtoolkit/element/ScrollArea.hpp>
 #include <hyprtoolkit/element/Textbox.hpp>
+#include <hyprtoolkit/element/Image.hpp>
 
 #include "../helpers/Memory.hpp"
 
@@ -21,15 +22,20 @@ class CResultButton {
     ~CResultButton() = default;
 
     SP<Hyprtoolkit::CRectangleElement> m_background;
-    SP<Hyprtoolkit::CNullElement>      m_container;
+    SP<Hyprtoolkit::CImageElement>     m_icon;
+    SP<Hyprtoolkit::CNullElement>      m_iconPlaceholder;
+    SP<Hyprtoolkit::CRowLayoutElement> m_container;
     SP<Hyprtoolkit::CTextElement>      m_label;
 
     bool                               m_added = false;
 
     void                               setActive(bool active);
-    void                               setLabel(const std::string& x);
+    void                               setLabel(const std::string& x, const std::string& icon = "");
 
   private:
-    bool        m_active    = false;
-    std::string m_lastLabel = "";
+    void        updatedFontSize();
+
+    bool        m_active       = false;
+    int         m_lastFontSize = 0.F;
+    std::string m_lastLabel = "", m_lastIcon = "";
 };
