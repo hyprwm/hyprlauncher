@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include <unordered_map>
+#include <filesystem>
 
 class CEntryCache {
   public:
@@ -26,5 +27,5 @@ class CEntryCache {
 
     std::unordered_map<std::string, SCacheEntry> m_cache;
     std::vector<std::string>                     m_cacheStrings;
-    std::string                                  m_cacheFullPath;
+    std::filesystem::path                        m_cacheFullPath;
 };
