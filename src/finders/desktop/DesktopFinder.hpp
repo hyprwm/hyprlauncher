@@ -31,7 +31,7 @@ class CDesktopFinder : public IFinder {
 
     UP<CEntryCache>                    m_entryFrequencyCache;
 
-    void                               cacheEntry(const std::string& path);
+    void                               cacheEntry(const std::filesystem::path& path);
     void                               replantWatch();
     void                               recache();
 
