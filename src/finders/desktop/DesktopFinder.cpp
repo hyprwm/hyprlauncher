@@ -241,6 +241,8 @@ void CDesktopFinder::cacheEntry(const std::string& path) {
 }
 
 std::vector<SFinderResult> CDesktopFinder::getResultsForQuery(const std::string& query) {
+    static auto                PICONSENABLED = Hyprlang::CSimpleConfigValue<Hyprlang::INT>(g_configManager->m_config.get(), "finders:desktop_icons");
+
     std::vector<SFinderResult> results;
 
     auto                       fuzzed = Fuzzy::getNResults(m_desktopEntryCacheGeneric, query, MAX_RESULTS_PER_FINDER);
@@ -253,7 +255,7 @@ std::vector<SFinderResult> CDesktopFinder::getResultsForQuery(const std::string&
             continue;
         results.emplace_back(SFinderResult{
             .label  = p->m_name,
-            .icon   = p->m_icon,
+            .icon   = *PICONSENABLED ? p->m_icon : "",
             .result = p,
         });
     }
