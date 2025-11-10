@@ -47,6 +47,14 @@ void CClientIPCSocket::sendOpen() {
     m_manager->sendSetOpenState(1 /* open */);
 }
 
+void CClientIPCSocket::sendClose() {
+    m_manager->sendSetOpenState(2 /* close */);
+}
+
+void CClientIPCSocket::sendToggle() {
+    m_manager->sendSetOpenState(0 /* toggle */);
+}
+
 void CClientIPCSocket::sendOpenWithOptions(const std::vector<std::string>& opts) {
     std::vector<const char*> optsC;
     optsC.reserve(opts.size());

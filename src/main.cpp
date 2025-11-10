@@ -94,7 +94,7 @@ int main(int argc, char** argv, char** envp) {
         if (!explicitOptions.empty())
             socket->sendOpenWithOptions(explicitOptions);
         else
-            socket->sendOpen();
+            socket->sendToggle();
         return 0;
     }
 
