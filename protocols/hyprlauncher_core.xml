@@ -54,6 +54,15 @@
       <arg name="options" type="array varchar" summary="option array"/>
     </c2s>
 
+    <c2s name="set_provider_with_options">
+      <description summary="Open the launcher with a specific provider and options">
+        Opens the launcher with a given provider (e.g., 'clipboard').
+        If the launcher is already open, this is a no-op.
+      </description>
+      <arg name="provider" type="varchar" summary="provider name"/>
+      <arg name="options" type="array varchar" summary="option array for the provider"/>
+    </c2s>
+
     <c2s name="get_info_object">
       <description summary="Get launcher's info object">
             Gets the launcher info object. That object will return some data about

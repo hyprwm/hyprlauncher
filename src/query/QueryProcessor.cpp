@@ -1,10 +1,10 @@
 #include "QueryProcessor.hpp"
 #include "../ui/UI.hpp"
 #include "../config/ConfigManager.hpp"
-
 #include "../finders/desktop/DesktopFinder.hpp"
 #include "../finders/unicode/UnicodeFinder.hpp"
 #include "../finders/math/MathFinder.hpp"
+#include "../finders/clipboard/ClipboardFinder.hpp"
 
 #include <hyprutils/utils/ScopeGuard.hpp>
 
@@ -17,12 +17,21 @@ static WP<IFinder> finderForName(const std::string& x) {
         return g_unicodeFinder;
     if (x == "math")
         return g_mathFinder;
+    if (x == "clipboard")
+        return g_clipboardFinder;
     return WP<IFinder>{};
+}
+
+bool CQueryProcessor::setProviderByName(const std::string& name) {
+    if      (name == "clipboard")      g_queryProcessor->overrideQueryProvider(g_clipboardFinder);
+    else if (name == "unicode")        g_queryProcessor->overrideQueryProvider(g_unicodeFinder);
+    else if (name == "math")           g_queryProcessor->overrideQueryProvider(g_mathFinder);
+    else return false;
+    return true;
 }
 
 static std::pair<WP<IFinder>, bool> finderForPrefix(const char x) {
     static auto PDEFAULTFINDER = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:default_finder");
-
     static auto PDESKTOPPREFIX = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:desktop_prefix");
     static auto PUNICODEPREFIX = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:unicode_prefix");
     static auto PMATHPREFIX    = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:math_prefix");
