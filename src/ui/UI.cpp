@@ -139,7 +139,7 @@ void CUI::setWindowOpen(bool open) {
         m_inputBox->rebuild()->defaultText("")->commence();
 
         for (const auto& b : m_resultButtons) {
-            b->setLabel("");
+            b->setLabel("", "");
             b->setActive(false);
         }
 
@@ -173,7 +173,10 @@ void CUI::updateResults(std::vector<SFinderResult>&& results) {
     m_activeElementId = 0;
 
     for (size_t i = 0; i < m_resultButtons.size(); ++i) {
-        m_resultButtons[i]->setLabel(m_currentResults.size() <= i ? "" : m_currentResults[i].label);
+        if (m_currentResults.size() <= i)
+            m_resultButtons[i]->setLabel("");
+        else
+            m_resultButtons[i]->setLabel(m_currentResults[i].label, m_currentResults[i].icon);
     }
 
     updateActive();

@@ -21,7 +21,7 @@ class CIPCEntry : public IFinderResult {
     virtual ~CIPCEntry() = default;
 
     virtual const std::string& fuzzable() {
-        return m_entry;
+        return m_fuzzable;
     }
 
     virtual eFinderTypes type() {
@@ -36,7 +36,7 @@ class CIPCEntry : public IFinderResult {
         Debug::log(TRACE, "Selected {}", m_entry);
     }
 
-    std::string m_entry;
+    std::string m_entry, m_fuzzable;
 };
 
 CIPCFinder::CIPCFinder() = default;
@@ -51,7 +51,9 @@ void CIPCFinder::setData(const std::vector<const char*>& data) {
     for (const auto& s : data) {
         auto e = m_entries.emplace_back(makeShared<CIPCEntry>());
         m_entriesGeneric.emplace_back(e);
-        e->m_entry = s;
+        e->m_entry    = s;
+        e->m_fuzzable = s;
+        std::ranges::transform(e->m_fuzzable, e->m_fuzzable.begin(), ::tolower);
     }
 }
 
@@ -61,7 +63,9 @@ void CIPCFinder::setData(const std::vector<std::string>& data) {
     for (const auto& s : data) {
         auto e = m_entries.emplace_back(makeShared<CIPCEntry>());
         m_entriesGeneric.emplace_back(e);
-        e->m_entry = s;
+        e->m_entry    = s;
+        e->m_fuzzable = s;
+        std::ranges::transform(e->m_fuzzable, e->m_fuzzable.begin(), ::tolower);
     }
 }
 

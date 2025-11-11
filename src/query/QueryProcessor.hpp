@@ -18,11 +18,14 @@ class CQueryProcessor {
     bool setProviderByName(const std::string& name);
 
   private:
+    void                    process();
+
     std::condition_variable m_threadCV;
     std::mutex              m_threadMutex, m_queryStrMutex, m_processingMutex;
     std::thread             m_queryThread;
     std::string             m_pendingQuery;
     bool                    m_quit = false, m_event = false;
+    bool                    m_newQuery = false;
     WP<IFinder>             m_overrideFinder;
 };
 
