@@ -8,6 +8,7 @@
 #include "socket/ServerSocket.hpp"
 #include "query/QueryProcessor.hpp"
 #include "config/ConfigManager.hpp"
+#include "i18n/Engine.hpp"
 
 #include <iostream>
 
@@ -111,6 +112,8 @@ int main(int argc, char** argv, char** envp) {
     g_ipcFinder->init();
 
     socket.reset();
+
+    I18n::initEngine();
 
     if (!explicitOptions.empty()) {
         g_ipcFinder->setData(explicitOptions);

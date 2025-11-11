@@ -6,6 +6,7 @@
 #include "../socket/ServerSocket.hpp"
 #include "../helpers/Log.hpp"
 #include "../config/ConfigManager.hpp"
+#include "../i18n/Engine.hpp"
 
 #include <hyprutils/string/String.hpp>
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -33,7 +34,7 @@ CUI::CUI(bool open) : m_openByDefault(open) {
     m_layout->setMargin(4);
 
     m_inputBox = Hyprtoolkit::CTextboxBuilder::begin()
-                     ->placeholder("Search something...")
+                     ->placeholder(I18n::localize(I18n::TXT_KEY_SEARCH_SOMETHING, {}))
                      ->onTextEdited([](SP<Hyprtoolkit::CTextboxElement>, const std::string& query) { g_queryProcessor->scheduleQueryUpdate(query); })
                      ->size({Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, Hyprtoolkit::CDynamicSize::HT_SIZE_ABSOLUTE, {1.F, 28.F}})
                      ->multiline(false)
