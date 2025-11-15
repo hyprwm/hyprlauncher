@@ -19,6 +19,9 @@ void I18n::initEngine() {
     // sv_SE (Swedish)
     engine.registerEntry("sv_SE", TXT_KEY_SEARCH_SOMETHING, "Sök...");
 
+    // sv_FI (Finnish Swedish)
+    engine.registerEntry("sv_FI", TXT_KEY_SEARCH_SOMETHING, "Sök...");
+
     // ja_JP (Japanese)
     engine.registerEntry("ja_JP", TXT_KEY_SEARCH_SOMETHING, "検索...");
 
