@@ -19,6 +19,9 @@ void I18n::initEngine() {
     // en_US (English)
     engine.registerEntry("en_US", TXT_KEY_SEARCH_SOMETHING, "Search...");
 
+    // fr_FR (French)
+    engine.registerEntry("fr_FR", TXT_KEY_SEARCH_SOMETHING, "Rechercher...");
+
     // he (Hebrew)
     engine.registerEntry("he", TXT_KEY_SEARCH_SOMETHING, "חיפוש...");
 
