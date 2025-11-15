@@ -25,6 +25,9 @@ void I18n::initEngine() {
     // es (Spanish)
     engine.registerEntry("es", TXT_KEY_SEARCH_SOMETHING, "Buscar...");
 
+    // fa (Farsi/Persian)
+    engine.registerEntry("fa", TXT_KEY_SEARCH_SOMETHING, "جستجو...");
+
     // fi_FI (Finnish)
     engine.registerEntry("fi_FI", TXT_KEY_SEARCH_SOMETHING, "Hae...");
 
