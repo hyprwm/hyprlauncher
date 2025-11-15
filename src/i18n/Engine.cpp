@@ -49,6 +49,9 @@ void I18n::initEngine() {
     // pt_PT (Portuguese Portugal)
     engine.registerEntry("pt_PT", TXT_KEY_SEARCH_SOMETHING, "Procurar...");
 
+    // ro_RO (Romanian)
+    engine.registerEntry("ro_RO", TXT_KEY_SEARCH_SOMETHING, "Caută...");
+
     // ru_RU (Russian)
     engine.registerEntry("ru_RU", TXT_KEY_SEARCH_SOMETHING, "Поиск...");
   
