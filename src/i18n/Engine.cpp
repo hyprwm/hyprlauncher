@@ -37,6 +37,9 @@ void I18n::initEngine() {
     // sv_FI (Finnish Swedish)
     engine.registerEntry("sv_FI", TXT_KEY_SEARCH_SOMETHING, "Sök...");
 
+    // vi_VN (Vietnamese)
+    engine.registerEntry("vi_VN", TXT_KEY_SEARCH_SOMETHING, "Tìm kiếm...");
+
     // zh (Simplified Chinese)
     engine.registerEntry("zh", TXT_KEY_SEARCH_SOMETHING, "搜索...");
 
