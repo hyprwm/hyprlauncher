@@ -19,9 +19,6 @@ void I18n::initEngine() {
     // ja_JP (Japanese)
     engine.registerEntry("ja_JP", TXT_KEY_SEARCH_SOMETHING, "検索...");
 
-    // nl_BE (Dutch Belgium)
-    engine.registerEntry("nl_BE", TXT_KEY_SEARCH_SOMETHING, "Zoeken...");
-
     // nl_NL (Dutch Netherlands)
     engine.registerEntry("nl_NL", TXT_KEY_SEARCH_SOMETHING, "Zoeken...");
 
@@ -33,9 +30,6 @@ void I18n::initEngine() {
   
     // sv_SE (Swedish)
     engine.registerEntry("sv_SE", TXT_KEY_SEARCH_SOMETHING, "Sök...");
-
-    // sv_FI (Finnish Swedish)
-    engine.registerEntry("sv_FI", TXT_KEY_SEARCH_SOMETHING, "Sök...");
 
     // vi_VN (Vietnamese)
     engine.registerEntry("vi_VN", TXT_KEY_SEARCH_SOMETHING, "Tìm kiếm...");
