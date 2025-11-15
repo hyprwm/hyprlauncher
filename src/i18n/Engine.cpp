@@ -8,7 +8,7 @@ void I18n::initEngine() {
     engine.setFallbackLocale("en_US");
 
     // de_DE (German)
-    engine.registerEntry("it_IT", TXT_KEY_SEARCH_SOMETHING, "Suche...");
+    engine.registerEntry("de_DE", TXT_KEY_SEARCH_SOMETHING, "Suche...");
     
     // en_US (English)
     engine.registerEntry("en_US", TXT_KEY_SEARCH_SOMETHING, "Search...");
