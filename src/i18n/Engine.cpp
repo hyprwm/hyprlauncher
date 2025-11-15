@@ -16,6 +16,9 @@ void I18n::initEngine() {
     // de_DE (German)
     engine.registerEntry("de_DE", TXT_KEY_SEARCH_SOMETHING, "Suche...");
     
+    // el_GR (Greek)
+    engine.registerEntry("el_GR", TXT_KEY_SEARCH_SOMETHING, "Αναζήτηστε...");
+    
     // en_US (English)
     engine.registerEntry("en_US", TXT_KEY_SEARCH_SOMETHING, "Search...");
 
@@ -57,9 +60,6 @@ void I18n::initEngine() {
 
     // zh_Hant (Traditional Chinese)
     engine.registerEntry("zh_Hant", TXT_KEY_SEARCH_SOMETHING, "搜尋...");
-
-    // el_GR (Greek)
-    engine.registerEntry("el_GR", TXT_KEY_SEARCH_SOMETHING, "Αναζήτηστε...");
 }
 
 std::string I18n::localize(eTextKeys key, const Hyprutils::I18n::translationVarMap& vars) {
