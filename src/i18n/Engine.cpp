@@ -19,6 +19,12 @@ void I18n::initEngine() {
     // ja_JP (Japanese)
     engine.registerEntry("ja_JP", TXT_KEY_SEARCH_SOMETHING, "検索...");
 
+    // nl_BE (Dutch Belgium)
+    engine.registerEntry("nl_BE", TXT_KEY_SEARCH_SOMETHING, "Zoeken...");
+
+    // nl_NL (Dutch Netherlands)
+    engine.registerEntry("nl_NL", TXT_KEY_SEARCH_SOMETHING, "Zoeken...");
+
     // pl_PL (Polish)
     engine.registerEntry("pl_PL", TXT_KEY_SEARCH_SOMETHING, "Szukaj...");
 
