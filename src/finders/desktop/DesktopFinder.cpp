@@ -47,6 +47,10 @@ class CDesktopEntry : public IFinderResult {
         return m_frequency;
     }
 
+    virtual const std::string& name() {
+        return m_name;
+    }
+
     virtual void run() {
         static auto            PLAUNCHPREFIX = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:desktop_launch_prefix");
         const std::string_view LAUNCH_PREFIX = *PLAUNCHPREFIX;

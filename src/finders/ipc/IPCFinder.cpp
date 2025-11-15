@@ -32,6 +32,10 @@ class CIPCEntry : public IFinderResult {
         return 0;
     }
 
+    virtual const std::string& name() {
+        return m_entry;
+    }
+
     virtual void run() {
         Debug::log(TRACE, "Selected {}", m_entry);
     }

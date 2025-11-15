@@ -29,6 +29,10 @@ class CUnicodeEntry : public IFinderResult {
         return m_frequency;
     }
 
+    virtual const std::string& name() {
+        return m_unicode;
+    }
+
     virtual void run() {
         Debug::log(TRACE, "Copying {} with wl-copy", m_unicode);
 

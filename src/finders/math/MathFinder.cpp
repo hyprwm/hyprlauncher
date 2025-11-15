@@ -21,6 +21,10 @@ class CMathEntry : public IFinderResult {
         return FINDER_MATH;
     }
 
+    virtual const std::string& name() {
+        return m_result;
+    }
+
     virtual void run() {
         Debug::log(TRACE, "Copying {} with wl-copy", m_result);
 

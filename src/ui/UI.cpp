@@ -147,7 +147,7 @@ void CUI::setWindowOpen(bool open) {
 }
 
 void CUI::onSelected() {
-    g_serverIPCSocket->sendSelectionMade(m_currentResults.at(m_activeElementId).result->fuzzable());
+    g_serverIPCSocket->sendSelectionMade(m_currentResults.at(m_activeElementId).result->name());
     m_currentResults.at(m_activeElementId).result->run();
     setWindowOpen(false);
     g_queryProcessor->overrideQueryProvider(WP<IFinder>{});
