@@ -7,6 +7,9 @@ static Hyprutils::I18n::CI18nEngine engine;
 void I18n::initEngine() {
     engine.setFallbackLocale("en_US");
 
+    // da_DK (Danish)
+    engine.registerEntry("da_DK", TXT_KEY_SEARCH_SOMETHING, "Søg...");
+    
     // de_DE (German)
     engine.registerEntry("de_DE", TXT_KEY_SEARCH_SOMETHING, "Suche...");
     
@@ -24,9 +27,6 @@ void I18n::initEngine() {
 
     // pl_PL (Polish)
     engine.registerEntry("pl_PL", TXT_KEY_SEARCH_SOMETHING, "Szukaj...");
-
-    // da_DK (Danish)
-    engine.registerEntry("da_DK", TXT_KEY_SEARCH_SOMETHING, "Søg...");
 
     // ru_RU (Russian)
     engine.registerEntry("ru_RU", TXT_KEY_SEARCH_SOMETHING, "Поиск...");
