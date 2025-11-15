@@ -126,31 +126,41 @@ void CDesktopFinder::recache() {
     m_desktopEntryCacheGeneric.clear();
 
     std::unordered_set<std::string> desktopFileIds;
+    std::unordered_set<std::filesystem::path> directories;
 
-    std::function<void (const std::filesystem::path&, const std::filesystem::path&)> cachePath;
-    cachePath = [this, &cachePath, &desktopFileIds](const std::filesystem::path& base, const std::filesystem::path& p) {
+    std::function<void (const std::filesystem::path&, const std::filesystem::path&)> cacheDirectory;
+    cacheDirectory = [this, &cacheDirectory, &desktopFileIds, &directories](const std::filesystem::path& base, const std::filesystem::path& p) {
         std::error_code ec;
+        auto            canonicalPath = std::filesystem::canonical(p, ec);
+        if (ec || !directories.insert(canonicalPath).second) {
+            Debug::log(TRACE, "desktop: skipping {}, does not exist / already visited", p.string());
+            return;
+        }
         auto            it = std::filesystem::directory_iterator(p, ec);
         if (ec) return;
         for (const auto& e : it) {
             auto status = e.status(ec);
             if (ec) continue;
             if (std::filesystem::is_regular_file(status)) {
-                auto desktopFileId = e.path().lexically_relative(base).string();
+                auto relDesktopFilePath = e.path().lexically_relative(base);
+                if (relDesktopFilePath.extension() != ".desktop") {
+                    Debug::log(TRACE, "desktop: skipping non-desktop file at {}", e.path().string());
+                    continue;
+                }
+                auto desktopFileId = relDesktopFilePath.string();
                 std::ranges::replace(desktopFileId, '/', '-');
                 if (desktopFileIds.insert(desktopFileId).second)
                     cacheEntry(e.path());
-                else Debug::log(TRACE, "Skipping entry, already cached desktopFileId {}", desktopFileId);
+                else Debug::log(TRACE, "desktop: skipping entry at {}, already cached desktopFileId {}", e.path().string(), desktopFileId);
             } else if (std::filesystem::is_directory(status))
-                // could recurse forever with recursive symlinks...
-                cachePath(base, e.path());
+                cacheDirectory(base, e.path());
         }
 
         m_desktopEntryPaths.emplace_back(p);
     };
 
     for (const auto& PATH : m_envPaths) {
-        cachePath(PATH, PATH);
+        cacheDirectory(PATH, PATH);
     }
 }
 
@@ -183,7 +193,7 @@ void CDesktopFinder::replantWatch() {
 }
 
 void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
-    Debug::log(TRACE, "desktop: caching entry {}", path.string());
+    Debug::log(TRACE, "desktop: caching entry at {}", path.string());
 
     const auto READ_RESULT = readFileAsString(path);
 
@@ -225,7 +235,7 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
     const auto NODISPLAY = extract("NoDisplay") == "true";
 
     if (EXEC.empty() || NAME.empty() || NODISPLAY) {
-        Debug::log(TRACE, "Skipping entry, empty name / exec / NoDisplay");
+        Debug::log(TRACE, "desktop: skipping entry, empty name / exec / NoDisplay");
         return;
     }
 
@@ -238,7 +248,7 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
     e->m_frequency = m_entryFrequencyCache->getCachedEntry(e->m_fuzzable);
     m_desktopEntryCacheGeneric.emplace_back(e);
 
-    Debug::log(TRACE, "Cached: {} with icon {} and exec line of \"{}\"", NAME, ICON, EXEC);
+    Debug::log(TRACE, "desktop: cached {} with icon {} and exec line of \"{}\"", NAME, ICON, EXEC);
 }
 
 std::vector<SFinderResult> CDesktopFinder::getResultsForQuery(const std::string& query) {
