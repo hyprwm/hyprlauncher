@@ -28,6 +28,9 @@ void I18n::initEngine() {
     // he (Hebrew)
     engine.registerEntry("he", TXT_KEY_SEARCH_SOMETHING, "חיפוש...");
 
+    // hi_IN (Hindi)
+    engine.registerEntry("hi_IN", TXT_KEY_SEARCH_SOMETHING, "खोजें...");
+
     // hu_HU (Hungarian)
     engine.registerEntry("hu_HU", TXT_KEY_SEARCH_SOMETHING, "Keresés...");
     
@@ -36,6 +39,9 @@ void I18n::initEngine() {
     
     // ja_JP (Japanese)
     engine.registerEntry("ja_JP", TXT_KEY_SEARCH_SOMETHING, "検索...");
+
+    // ml_IN (Malayalam)
+    engine.registerEntry("ml_IN", TXT_KEY_SEARCH_SOMETHING, "തിരയുക...");
 
     // nl_NL (Dutch Netherlands)
     engine.registerEntry("nl_NL", TXT_KEY_SEARCH_SOMETHING, "Zoeken...");
@@ -54,6 +60,9 @@ void I18n::initEngine() {
   
     // sv_SE (Swedish)
     engine.registerEntry("sv_SE", TXT_KEY_SEARCH_SOMETHING, "Sök...");
+    
+    // ta_IN (Tamil)
+    engine.registerEntry("ta_IN", TXT_KEY_SEARCH_SOMETHING, "தேடவும்...");
 
     // vi_VN (Vietnamese)
     engine.registerEntry("vi_VN", TXT_KEY_SEARCH_SOMETHING, "Tìm kiếm...");
