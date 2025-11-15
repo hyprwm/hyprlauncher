@@ -7,23 +7,29 @@ static Hyprutils::I18n::CI18nEngine engine;
 void I18n::initEngine() {
     engine.setFallbackLocale("en_US");
 
+    // de_DE (German)
+    engine.registerEntry("de_DE", TXT_KEY_SEARCH_SOMETHING, "Suche...");
+    
     // en_US (English)
     engine.registerEntry("en_US", TXT_KEY_SEARCH_SOMETHING, "Search...");
-
-    // ru_RU (Russian)
-    engine.registerEntry("ru_RU", TXT_KEY_SEARCH_SOMETHING, "Поиск...");
+    
+    // it_IT (Italian)
+    engine.registerEntry("it_IT", TXT_KEY_SEARCH_SOMETHING, "Cerca...");
+    
+    // ja_JP (Japanese)
+    engine.registerEntry("ja_JP", TXT_KEY_SEARCH_SOMETHING, "検索...");
 
     // pl_PL (Polish)
     engine.registerEntry("pl_PL", TXT_KEY_SEARCH_SOMETHING, "Szukaj...");
 
+    // ru_RU (Russian)
+    engine.registerEntry("ru_RU", TXT_KEY_SEARCH_SOMETHING, "Поиск...");
+  
     // sv_SE (Swedish)
     engine.registerEntry("sv_SE", TXT_KEY_SEARCH_SOMETHING, "Sök...");
 
     // sv_FI (Finnish Swedish)
     engine.registerEntry("sv_FI", TXT_KEY_SEARCH_SOMETHING, "Sök...");
-
-    // ja_JP (Japanese)
-    engine.registerEntry("ja_JP", TXT_KEY_SEARCH_SOMETHING, "検索...");
 
     // zh (Simplified Chinese)
     engine.registerEntry("zh", TXT_KEY_SEARCH_SOMETHING, "搜索...");
