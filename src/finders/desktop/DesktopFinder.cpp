@@ -9,6 +9,7 @@
 #include <fstream>
 #include <sys/inotify.h>
 #include <sys/poll.h>
+#include <unordered_set>
 
 #include <hyprutils/string/String.hpp>
 #include <hyprutils/os/Process.hpp>
@@ -17,13 +18,13 @@
 using namespace Hyprutils::String;
 using namespace Hyprutils::OS;
 
-static std::optional<std::string> readFileAsString(const std::string& path) {
+static std::optional<std::string> readFileAsString(const std::filesystem::path& path) {
     std::error_code ec;
 
     if (!std::filesystem::exists(path, ec) || ec)
         return std::nullopt;
 
-    std::ifstream file(path);
+    std::ifstream file(path.string());
     if (!file.good())
         return std::nullopt;
 
@@ -96,25 +97,19 @@ static std::filesystem::path resolvePath(const std::string& p) {
     return std::filesystem::path(HOME) / p.substr(2);
 }
 
-static const std::array<std::filesystem::path, 3> DESKTOP_ENTRY_PATHS = {"/usr/local/share/applications", "/usr/share/applications", resolvePath("~/.local/share/applications")};
-
 CDesktopFinder::CDesktopFinder() : m_inotifyFd(inotify_init()), m_entryFrequencyCache(makeUnique<CEntryCache>("desktop")) {
-    const auto ENV = getenv("XDG_DATA_DIRS");
-    if (!ENV)
-        return;
+    if (const auto DATA_HOME = getenv("XDG_DATA_HOME"))
+        m_envPaths.emplace_back(std::filesystem::path(DATA_HOME) / "applications");
+    else
+        m_envPaths.emplace_back(resolvePath("~/.local/share/applications"));
 
-    CConstVarList paths(ENV, 0, ':', false);
-
-    for (const auto& p : paths) {
-        const std::filesystem::path PTH = std::filesystem::path(p) / "applications";
-        std::error_code             ec;
-        if (!std::filesystem::exists(PTH, ec) || ec)
-            continue;
-
-        if (std::ranges::contains(DESKTOP_ENTRY_PATHS, PTH))
-            continue;
-
-        m_envPaths.emplace_back(PTH);
+    if (const auto DATA_DIRS = getenv("XDG_DATA_DIRS")) {
+        CConstVarList paths(DATA_DIRS, 0, ':', false);
+        for (const auto& p : paths)
+            m_envPaths.emplace_back(std::filesystem::path(p) / "applications");
+    } else {
+        m_envPaths.emplace_back("/usr/local/share/applications");
+        m_envPaths.emplace_back("/usr/share/applications");
     }
 }
 
@@ -134,26 +129,42 @@ void CDesktopFinder::recache() {
     m_desktopEntryCache.clear();
     m_desktopEntryCacheGeneric.clear();
 
-    auto cachePath = [this](const std::string& p) {
-        std::error_code ec;
-        auto            it = std::filesystem::directory_iterator(resolvePath(p), ec);
-        if (ec)
-            return;
-        for (const auto& e : it) {
-            if (!e.is_regular_file(ec) || ec)
-                continue;
+    std::unordered_set<std::string> desktopFileIds;
+    std::unordered_set<std::filesystem::path> directories;
 
-            cacheEntry(e.path().string());
+    std::function<void (const std::filesystem::path&, const std::filesystem::path&)> cacheDirectory;
+    cacheDirectory = [this, &cacheDirectory, &desktopFileIds, &directories](const std::filesystem::path& base, const std::filesystem::path& p) {
+        std::error_code ec;
+        auto            canonicalPath = std::filesystem::canonical(p, ec);
+        if (ec || !directories.insert(canonicalPath).second) {
+            Debug::log(TRACE, "desktop: skipping {}, does not exist / already visited", p.string());
+            return;
+        }
+        auto            it = std::filesystem::directory_iterator(p, ec);
+        if (ec) return;
+        for (const auto& e : it) {
+            auto status = e.status(ec);
+            if (ec) continue;
+            if (std::filesystem::is_regular_file(status)) {
+                auto relDesktopFilePath = e.path().lexically_relative(base);
+                if (relDesktopFilePath.extension() != ".desktop") {
+                    Debug::log(TRACE, "desktop: skipping non-desktop file at {}", e.path().string());
+                    continue;
+                }
+                auto desktopFileId = relDesktopFilePath.string();
+                std::ranges::replace(desktopFileId, '/', '-');
+                if (desktopFileIds.insert(desktopFileId).second)
+                    cacheEntry(e.path());
+                else Debug::log(TRACE, "desktop: skipping entry at {}, already cached desktopFileId {}", e.path().string(), desktopFileId);
+            } else if (std::filesystem::is_directory(status))
+                cacheDirectory(base, e.path());
         }
 
-        m_desktopEntryPaths.emplace_back(resolvePath(p));
+        m_desktopEntryPaths.emplace_back(p);
     };
 
-    for (const auto& PATH : DESKTOP_ENTRY_PATHS) {
-        cachePath(PATH);
-    }
     for (const auto& PATH : m_envPaths) {
-        cachePath(PATH);
+        cacheDirectory(PATH, PATH);
     }
 }
 
@@ -185,8 +196,8 @@ void CDesktopFinder::replantWatch() {
     }
 }
 
-void CDesktopFinder::cacheEntry(const std::string& path) {
-    Debug::log(TRACE, "desktop: caching entry {}", path);
+void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
+    Debug::log(TRACE, "desktop: caching entry at {}", path.string());
 
     const auto READ_RESULT = readFileAsString(path);
 
@@ -228,7 +239,7 @@ void CDesktopFinder::cacheEntry(const std::string& path) {
     const auto NODISPLAY = extract("NoDisplay") == "true";
 
     if (EXEC.empty() || NAME.empty() || NODISPLAY) {
-        Debug::log(TRACE, "Skipping entry, empty name / exec / NoDisplay");
+        Debug::log(TRACE, "desktop: skipping entry, empty name / exec / NoDisplay");
         return;
     }
 
@@ -241,7 +252,7 @@ void CDesktopFinder::cacheEntry(const std::string& path) {
     e->m_frequency = m_entryFrequencyCache->getCachedEntry(e->m_fuzzable);
     m_desktopEntryCacheGeneric.emplace_back(e);
 
-    Debug::log(TRACE, "Cached: {} with icon {} and exec line of \"{}\"", NAME, ICON, EXEC);
+    Debug::log(TRACE, "desktop: cached {} with icon {} and exec line of \"{}\"", NAME, ICON, EXEC);
 }
 
 std::vector<SFinderResult> CDesktopFinder::getResultsForQuery(const std::string& query) {
