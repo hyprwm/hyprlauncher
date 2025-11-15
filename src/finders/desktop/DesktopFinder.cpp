@@ -181,7 +181,7 @@ void CDesktopFinder::replantWatch() {
     }
 
     for (const auto& p : m_desktopEntryPaths) {
-        m_watches.emplace_back(inotify_add_watch(m_inotifyFd.get(), p.c_str(), IN_MODIFY | IN_DONT_FOLLOW));
+        m_watches.emplace_back(inotify_add_watch(m_inotifyFd.get(), p.c_str(), IN_MODIFY | IN_DONT_FOLLOW | IN_CREATE | IN_DELETE | IN_MOVE));
     }
 }
 
