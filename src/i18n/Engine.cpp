@@ -15,16 +15,16 @@ void I18n::initEngine() {
 
     // cs_CZ (Czech)
     engine.registerEntry("cs_CZ", TXT_KEY_SEARCH_SOMETHING, "Hledat...");
-    
+
     // da_DK (Danish)
     engine.registerEntry("da_DK", TXT_KEY_SEARCH_SOMETHING, "Søg...");
-    
+
     // de_DE (German)
     engine.registerEntry("de_DE", TXT_KEY_SEARCH_SOMETHING, "Suche...");
-    
+
     // el_GR (Greek)
     engine.registerEntry("el_GR", TXT_KEY_SEARCH_SOMETHING, "Αναζήτηστε...");
-    
+
     // en_US (English)
     engine.registerEntry("en_US", TXT_KEY_SEARCH_SOMETHING, "Search...");
 
@@ -48,16 +48,16 @@ void I18n::initEngine() {
 
     // hu_HU (Hungarian)
     engine.registerEntry("hu_HU", TXT_KEY_SEARCH_SOMETHING, "Keresés...");
-    
+
     // id_ID (Indonesian)
     engine.registerEntry("id_ID", TXT_KEY_SEARCH_SOMETHING, "Cari...");
 
     // it_IT (Italian)
     engine.registerEntry("it_IT", TXT_KEY_SEARCH_SOMETHING, "Cerca...");
-    
+
     // ja_JP (Japanese)
     engine.registerEntry("ja_JP", TXT_KEY_SEARCH_SOMETHING, "検索...");
-      
+
     // ku (Kurdish)
     engine.registerEntry("ku", TXT_KEY_SEARCH_SOMETHING, "Bigere...");
 
@@ -78,21 +78,27 @@ void I18n::initEngine() {
 
     // pt_BR (Portuguese BR)
     engine.registerEntry("pt_BR", TXT_KEY_SEARCH_SOMETHING, "Buscar...");
-    
+
     // pt_PT (Portuguese Portugal)
     engine.registerEntry("pt_PT", TXT_KEY_SEARCH_SOMETHING, "Procurar...");
+
+    // pa_IN (Punjabi)
+    engine.registerEntry("pa_IN", TXT_KEY_SEARCH_SOMETHING, "ਖੋਜ...");
 
     // ro_RO (Romanian)
     engine.registerEntry("ro_RO", TXT_KEY_SEARCH_SOMETHING, "Caută...");
 
     // ru_RU (Russian)
     engine.registerEntry("ru_RU", TXT_KEY_SEARCH_SOMETHING, "Поиск...");
-  
+
     // sv_SE (Swedish)
     engine.registerEntry("sv_SE", TXT_KEY_SEARCH_SOMETHING, "Sök...");
-    
+
     // ta_IN (Tamil)
     engine.registerEntry("ta_IN", TXT_KEY_SEARCH_SOMETHING, "தேடவும்...");
+
+    // te_IN (Telugu)
+    engine.registerEntry("te_IN", TXT_KEY_SEARCH_SOMETHING, "శోధన...");
 
     // tr_TR (Turkish)
     engine.registerEntry("tr_TR", TXT_KEY_SEARCH_SOMETHING, "Ara...");
@@ -100,7 +106,7 @@ void I18n::initEngine() {
     // uk_UA (Ukrainian)
     engine.registerEntry("uk_UA", TXT_KEY_SEARCH_SOMETHING, "Пошук...");
 
-     // vi_VN (Vietnamese)
+    // vi_VN (Vietnamese)
     engine.registerEntry("vi_VN", TXT_KEY_SEARCH_SOMETHING, "Tìm kiếm...");
 
     // zh (Simplified Chinese)

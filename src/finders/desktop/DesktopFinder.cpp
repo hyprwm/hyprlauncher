@@ -129,10 +129,10 @@ void CDesktopFinder::recache() {
     m_desktopEntryCache.clear();
     m_desktopEntryCacheGeneric.clear();
 
-    std::unordered_set<std::string> desktopFileIds;
-    std::unordered_set<std::filesystem::path> directories;
+    std::unordered_set<std::string>                                                 desktopFileIds;
+    std::unordered_set<std::filesystem::path>                                       directories;
 
-    std::function<void (const std::filesystem::path&, const std::filesystem::path&)> cacheDirectory;
+    std::function<void(const std::filesystem::path&, const std::filesystem::path&)> cacheDirectory;
     cacheDirectory = [this, &cacheDirectory, &desktopFileIds, &directories](const std::filesystem::path& base, const std::filesystem::path& p) {
         std::error_code ec;
         auto            canonicalPath = std::filesystem::canonical(p, ec);
@@ -140,11 +140,13 @@ void CDesktopFinder::recache() {
             Debug::log(TRACE, "desktop: skipping {}, does not exist / already visited", p.string());
             return;
         }
-        auto            it = std::filesystem::directory_iterator(p, ec);
-        if (ec) return;
+        auto it = std::filesystem::directory_iterator(p, ec);
+        if (ec)
+            return;
         for (const auto& e : it) {
             auto status = e.status(ec);
-            if (ec) continue;
+            if (ec)
+                continue;
             if (std::filesystem::is_regular_file(status)) {
                 auto relDesktopFilePath = e.path().lexically_relative(base);
                 if (relDesktopFilePath.extension() != ".desktop") {
@@ -155,7 +157,8 @@ void CDesktopFinder::recache() {
                 std::ranges::replace(desktopFileId, '/', '-');
                 if (desktopFileIds.insert(desktopFileId).second)
                     cacheEntry(e.path());
-                else Debug::log(TRACE, "desktop: skipping entry at {}, already cached desktopFileId {}", e.path().string(), desktopFileId);
+                else
+                    Debug::log(TRACE, "desktop: skipping entry at {}, already cached desktopFileId {}", e.path().string(), desktopFileId);
             } else if (std::filesystem::is_directory(status))
                 cacheDirectory(base, e.path());
         }
