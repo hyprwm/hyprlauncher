@@ -49,6 +49,9 @@ void I18n::initEngine() {
     // hu_HU (Hungarian)
     engine.registerEntry("hu_HU", TXT_KEY_SEARCH_SOMETHING, "Keresés...");
     
+    // id_ID (Indonesian)
+    engine.registerEntry("id_ID", TXT_KEY_SEARCH_SOMETHING, "Cari...");
+
     // it_IT (Italian)
     engine.registerEntry("it_IT", TXT_KEY_SEARCH_SOMETHING, "Cerca...");
     
