@@ -10,6 +10,9 @@ void I18n::initEngine() {
     // ar (Arabic)
     engine.registerEntry("ar", TXT_KEY_SEARCH_SOMETHING, "بحث...");
     
+    // cs_CZ (Czech)
+    engine.registerEntry("cs_CZ", TXT_KEY_SEARCH_SOMETHING, "Hledat...");
+    
     // da_DK (Danish)
     engine.registerEntry("da_DK", TXT_KEY_SEARCH_SOMETHING, "Søg...");
     
