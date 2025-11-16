@@ -13,6 +13,9 @@ void I18n::initEngine() {
     // as_IN (Assamese)
     engine.registerEntry("as_IN", TXT_KEY_SEARCH_SOMETHING, "অনুসন্ধান...");
 
+    // ca_ES (Catalan)
+    engine.registerEntry("ca_ES", TXT_KEY_SEARCH_SOMETHING, "Cercar...");
+
     // cs_CZ (Czech)
     engine.registerEntry("cs_CZ", TXT_KEY_SEARCH_SOMETHING, "Hledat...");
 
