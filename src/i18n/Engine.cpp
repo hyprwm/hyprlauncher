@@ -6,10 +6,10 @@ static Hyprutils::I18n::CI18nEngine engine;
 //
 void I18n::initEngine() {
     engine.setFallbackLocale("en_US");
-    
+
     // ar (Arabic)
     engine.registerEntry("ar", TXT_KEY_SEARCH_SOMETHING, "بحث...");
-    
+
     // as_IN (Assamese)
     engine.registerEntry("as_IN", TXT_KEY_SEARCH_SOMETHING, "অনুসন্ধান...");
 
