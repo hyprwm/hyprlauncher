@@ -52,6 +52,9 @@ void I18n::initEngine() {
     // ja_JP (Japanese)
     engine.registerEntry("ja_JP", TXT_KEY_SEARCH_SOMETHING, "検索...");
 
+    // lt_LT (Lithuanian)
+    engine.registerEntry("lt_LT", TXT_KEY_SEARCH_SOMETHING, "Paieška...");
+
     // ml_IN (Malayalam)
     engine.registerEntry("ml_IN", TXT_KEY_SEARCH_SOMETHING, "തിരയുക...");
 
