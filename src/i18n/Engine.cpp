@@ -55,6 +55,9 @@ void I18n::initEngine() {
     // ml_IN (Malayalam)
     engine.registerEntry("ml_IN", TXT_KEY_SEARCH_SOMETHING, "തിരയുക...");
 
+    // nb_NO (Norwegian Bokmål)
+    engine.registerEntry("nb_NO", TXT_KEY_SEARCH_SOMETHING, "Søk...");
+
     // nl_NL (Dutch Netherlands)
     engine.registerEntry("nl_NL", TXT_KEY_SEARCH_SOMETHING, "Zoeken...");
 
