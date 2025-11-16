@@ -73,6 +73,9 @@ void I18n::initEngine() {
     // nl_NL (Dutch Netherlands)
     engine.registerEntry("nl_NL", TXT_KEY_SEARCH_SOMETHING, "Zoeken...");
 
+    // pa_IN (Punjabi)
+    engine.registerEntry("pa_IN", TXT_KEY_SEARCH_SOMETHING, "ਖੋਜ...");
+    
     // pl_PL (Polish)
     engine.registerEntry("pl_PL", TXT_KEY_SEARCH_SOMETHING, "Szukaj...");
 
