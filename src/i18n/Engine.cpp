@@ -6,10 +6,10 @@ static Hyprutils::I18n::CI18nEngine engine;
 //
 void I18n::initEngine() {
     engine.setFallbackLocale("en_US");
-
+    
     // ar (Arabic)
     engine.registerEntry("ar", TXT_KEY_SEARCH_SOMETHING, "بحث...");
-
+    
     // as_IN (Assamese)
     engine.registerEntry("as_IN", TXT_KEY_SEARCH_SOMETHING, "অনুসন্ধান...");
 
@@ -73,9 +73,6 @@ void I18n::initEngine() {
     // nl_NL (Dutch Netherlands)
     engine.registerEntry("nl_NL", TXT_KEY_SEARCH_SOMETHING, "Zoeken...");
 
-    // pa_IN (Punjabi)
-    engine.registerEntry("pa_IN", TXT_KEY_SEARCH_SOMETHING, "ਖੋਜ...");
-    
     // pl_PL (Polish)
     engine.registerEntry("pl_PL", TXT_KEY_SEARCH_SOMETHING, "Szukaj...");
 
@@ -84,6 +81,9 @@ void I18n::initEngine() {
 
     // pt_PT (Portuguese Portugal)
     engine.registerEntry("pt_PT", TXT_KEY_SEARCH_SOMETHING, "Procurar...");
+
+    // pa_IN (Punjabi)
+    engine.registerEntry("pa_IN", TXT_KEY_SEARCH_SOMETHING, "ਖੋਜ...");
 
     // ro_RO (Romanian)
     engine.registerEntry("ro_RO", TXT_KEY_SEARCH_SOMETHING, "Caută...");
@@ -97,11 +97,11 @@ void I18n::initEngine() {
     // ta_IN (Tamil)
     engine.registerEntry("ta_IN", TXT_KEY_SEARCH_SOMETHING, "தேடவும்...");
 
-    // tr_TR (Turkish)
-    engine.registerEntry("tr_TR", TXT_KEY_SEARCH_SOMETHING, "Ara...");
-
     // te_IN (Telugu)
     engine.registerEntry("te_IN", TXT_KEY_SEARCH_SOMETHING, "శోధన...");
+
+    // tr_TR (Turkish)
+    engine.registerEntry("tr_TR", TXT_KEY_SEARCH_SOMETHING, "Ara...");
 
     // vi_VN (Vietnamese)
     engine.registerEntry("vi_VN", TXT_KEY_SEARCH_SOMETHING, "Tìm kiếm...");
