@@ -79,9 +79,10 @@ void I18n::initEngine() {
     // ta_IN (Tamil)
     engine.registerEntry("ta_IN", TXT_KEY_SEARCH_SOMETHING, "தேடவும்...");
 
-       // tr_TR (Turkish)
+    // tr_TR (Turkish)
     engine.registerEntry("tr_TR", TXT_KEY_SEARCH_SOMETHING, "Ara...");
- // vi_VN (Vietnamese)
+    
+     // vi_VN (Vietnamese)
     engine.registerEntry("vi_VN", TXT_KEY_SEARCH_SOMETHING, "Tìm kiếm...");
 
     // zh (Simplified Chinese)
