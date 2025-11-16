@@ -94,6 +94,12 @@ void I18n::initEngine() {
     // ru_RU (Russian)
     engine.registerEntry("ru_RU", TXT_KEY_SEARCH_SOMETHING, "Поиск...");
 
+    // sr_RS (Serbian)
+    engine.registerEntry("sr_RS", TXT_KEY_SEARCH_SOMETHING, "Тражи...");
+
+    // sr_RS@latin (Serbian Latin)
+    engine.registerEntry("sr_RS@latin", TXT_KEY_SEARCH_SOMETHING, "Traži...");
+
     // sv_SE (Swedish)
     engine.registerEntry("sv_SE", TXT_KEY_SEARCH_SOMETHING, "Sök...");
 
