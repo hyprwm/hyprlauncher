@@ -61,6 +61,9 @@ void I18n::initEngine() {
     // ku (Kurdish)
     engine.registerEntry("ku", TXT_KEY_SEARCH_SOMETHING, "Bigere...");
 
+    // lt_LT (Lithuanian)
+    engine.registerEntry("lt_LT", TXT_KEY_SEARCH_SOMETHING, "Paieška...");
+
     // ml_IN (Malayalam)
     engine.registerEntry("ml_IN", TXT_KEY_SEARCH_SOMETHING, "തിരയുക...");
 
