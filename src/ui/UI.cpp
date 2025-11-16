@@ -147,6 +147,8 @@ void CUI::setWindowOpen(bool open) {
 }
 
 void CUI::onSelected() {
+    if (m_currentResults.size() <= m_activeElementId)
+        return;
     g_serverIPCSocket->sendSelectionMade(m_currentResults.at(m_activeElementId).result->name());
     m_currentResults.at(m_activeElementId).result->run();
     setWindowOpen(false);
