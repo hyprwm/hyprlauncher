@@ -115,6 +115,9 @@ void I18n::initEngine() {
     // tr_TR (Turkish)
     engine.registerEntry("tr_TR", TXT_KEY_SEARCH_SOMETHING, "Ara...");
 
+    // tt_RU (Tatar)
+    engine.registerEntry("tt_RU", TXT_KEY_SEARCH_SOMETHING, "Эзләү...");
+
     // uk_UA (Ukrainian)
     engine.registerEntry("uk_UA", TXT_KEY_SEARCH_SOMETHING, "Пошук...");
 
