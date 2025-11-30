@@ -130,9 +130,6 @@ void I18n::initEngine() {
     // zh_Hant (Traditional Chinese)
     engine.registerEntry("zh_Hant", TXT_KEY_SEARCH_SOMETHING, "搜尋...");
 
-    // en_NP (Romanized Nepali)
-    engine.registerEntry("en_NP", TXT_KEY_SEARCH_SOMETHING, "Khoja...");
-
     // ne_NP (Nepali)
     engine.registerEntry("ne_NP", TXT_KEY_SEARCH_SOMETHING, "खोज...");
 }
