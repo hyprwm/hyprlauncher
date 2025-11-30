@@ -94,6 +94,15 @@ void I18n::initEngine() {
     // ru_RU (Russian)
     engine.registerEntry("ru_RU", TXT_KEY_SEARCH_SOMETHING, "Поиск...");
 
+    // sl_SI (Slovenian)
+    engine.registerEntry("sl_SI", TXT_KEY_SEARCH_SOMETHING, "Iščite...");
+
+    // sr_RS (Serbian)
+    engine.registerEntry("sr_RS", TXT_KEY_SEARCH_SOMETHING, "Тражи...");
+
+    // sr_RS@latin (Serbian Latin)
+    engine.registerEntry("sr_RS@latin", TXT_KEY_SEARCH_SOMETHING, "Traži...");
+
     // sv_SE (Swedish)
     engine.registerEntry("sv_SE", TXT_KEY_SEARCH_SOMETHING, "Sök...");
 
@@ -105,6 +114,9 @@ void I18n::initEngine() {
 
     // tr_TR (Turkish)
     engine.registerEntry("tr_TR", TXT_KEY_SEARCH_SOMETHING, "Ara...");
+
+    // tt_RU (Tatar)
+    engine.registerEntry("tt_RU", TXT_KEY_SEARCH_SOMETHING, "Эзләү...");
 
     // uk_UA (Ukrainian)
     engine.registerEntry("uk_UA", TXT_KEY_SEARCH_SOMETHING, "Пошук...");
