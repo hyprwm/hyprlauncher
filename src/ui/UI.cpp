@@ -17,7 +17,8 @@ using namespace Hyprutils::String;
 constexpr const size_t MAX_RESULTS_IN_LAUNCHER = 25;
 
 CUI::CUI(bool open) : m_openByDefault(open) {
-    static auto PGRABFOCUS = Hyprlang::CSimpleConfigValue<Hyprlang::INT>(g_configManager->m_config.get(), "general:grab_focus");
+    static auto PGRABFOCUS  = Hyprlang::CSimpleConfigValue<Hyprlang::INT>(g_configManager->m_config.get(), "general:grab_focus");
+    static auto PWINDOWSIZE = Hyprlang::CSimpleConfigValue<Hyprlang::VEC2>(g_configManager->m_config.get(), "ui:window_size");
 
     m_backend = Hyprtoolkit::IBackend::create();
 
@@ -68,7 +69,7 @@ CUI::CUI(bool open) : m_openByDefault(open) {
     m_window = Hyprtoolkit::CWindowBuilder::begin()
                    ->appClass("hyprlauncher")
                    ->type(Hyprtoolkit::HT_WINDOW_LAYER)
-                   ->preferredSize({400, 260})
+                   ->preferredSize({(*PWINDOWSIZE).x, (*PWINDOWSIZE).y})
                    ->anchor(1 | 2 | 4 | 8)
                    ->exclusiveZone(-1)
                    ->layer(3)
