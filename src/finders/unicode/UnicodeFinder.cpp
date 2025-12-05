@@ -61,6 +61,10 @@ void CUnicodeFinder::init() {
         if (isSurrogate(cp))
             continue;
 
+        auto category = u_charType(cp);
+        if (category == U_UNASSIGNED || category == U_PRIVATE_USE_CHAR || category == U_SURROGATE)
+            continue;
+
         UErrorCode        status = U_ZERO_ERROR;
         char              nameBuf[256];
         int32_t           len = u_charName(cp, U_EXTENDED_CHAR_NAME, nameBuf, sizeof(nameBuf), &status);
