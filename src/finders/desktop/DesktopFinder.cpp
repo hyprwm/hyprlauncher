@@ -230,7 +230,7 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
 
         size_t ends = DATA.find("\n", begins + 1);
 
-        if (!ends)
+        if (ends == std::string::npos)
             return std::string_view{DATA}.substr(begins);
 
         return std::string_view{DATA}.substr(begins, ends - begins);
