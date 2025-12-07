@@ -209,31 +209,35 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
 
     const auto& DATA = *READ_RESULT;
 
-    auto        extract = [&DATA](const std::string_view what) -> std::string_view {
-        size_t begins = DATA.find("\n" + std::string{what} + " ");
+    auto        extract = [&](std::string_view key) -> std::string {
+        std::stringstream ss(DATA);
+        std::string       line;
 
-        if (begins == std::string::npos)
-            begins = DATA.find("\n" + std::string{what} + "=");
+        while (std::getline(ss, line)) {
+            // trim trailing '\r'
+            if (!line.empty() && line.back() == '\r')
+                line.pop_back();
 
-        if (begins == std::string::npos)
-            return "";
+            // must match exactly key
+            // not NameExtra, NotName, etc.
+            if (!line.starts_with(key))
+                continue;
 
-        begins = DATA.find('=', begins);
+            if (line.size() <= key.size() || line[key.size()] != '=')
+                continue; // not an exact match
 
-        if (begins == std::string::npos)
-            return "";
+            std::string val = line.substr(key.size() + 1);
 
-        begins += 1; // eat the equals
-        while (begins < DATA.size() && std::isspace(DATA[begins])) {
-            ++begins;
+            // trim leading whitespace
+            val.erase(val.begin(), std::ranges::find_if(val, [](auto c) { return !std::isspace(c); }));
+
+            // trim trailing whitespace
+            val.erase(std::ranges::find_if(val.rbegin(), val.rend(), [](auto c) { return !std::isspace(c); }).base(), val.end());
+
+            return val;
         }
 
-        size_t ends = DATA.find("\n", begins + 1);
-
-        if (ends == std::string::npos)
-            return std::string_view{DATA}.substr(begins);
-
-        return std::string_view{DATA}.substr(begins, ends - begins);
+        return "";
     };
 
     const auto NAME      = extract("Name");
