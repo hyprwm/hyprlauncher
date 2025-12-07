@@ -62,7 +62,8 @@ static float jaroWinklerFull(const std::string_view& query, const std::string_vi
     float score = jaroWinkler(query, test);
 
     // if the similarity is good enough, we can consider substr and prefix.
-    if (score > BOOST_THRESHOLD || test.contains(query)) {
+    auto contains = test.contains(query);
+    if (score > BOOST_THRESHOLD || contains) {
         size_t       prefixLen = 0;
         const size_t MAXPREFIX = 20;
 
@@ -70,7 +71,7 @@ static float jaroWinklerFull(const std::string_view& query, const std::string_vi
             ++prefixLen;
         }
 
-        if (test.contains(query))
+        if (contains)
             score += (std::min(test.length(), sc<size_t>(4)) * SUBSTR_SCALE * (1.F - score));
         if (prefixLen)
             score += (sc<float>(prefixLen) * PREFIX_SCALE * (1.F - score));
