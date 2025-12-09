@@ -5,7 +5,7 @@ A multipurpose and versatile launcher / picker for Hyprland
 
 ## Features
 
-- Various providers: Desktop, Unicode, Emoji, Math ...
+- Various providers: Desktop, Unicode, Emoji, Math, Font ...
 - Speedy: Fast, multi-threaded fuzzy searching
 - Daemon by default: instant opening of the launcher
 - Entry frequency caching: commonly used entries appear above others
@@ -16,3 +16,4 @@ A multipurpose and versatile launcher / picker for Hyprland
 - Desktop: none
 - Unicode: `wl-copy`
 - Math: `wl-copy` for copying the result
+- Font: `wl-copy` for copying the result

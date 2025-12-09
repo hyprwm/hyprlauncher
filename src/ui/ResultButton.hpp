@@ -30,7 +30,7 @@ class CResultButton {
     bool                               m_added = false;
 
     void                               setActive(bool active);
-    void                               setLabel(const std::string& x, const std::string& icon = "");
+    void                               setLabel(const std::string& x, const std::string& icon, const std::string& font);
 
   private:
     void        updatedFontSize();

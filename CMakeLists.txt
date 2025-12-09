@@ -30,6 +30,7 @@ pkg_check_modules(
   hyprwire
   icu-uc
   hyprlang
+  fontconfig
   libqalculate
 )
 

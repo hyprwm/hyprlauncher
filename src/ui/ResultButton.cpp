@@ -63,7 +63,7 @@ void CResultButton::setActive(bool active) {
         ->commence();
 }
 
-void CResultButton::setLabel(const std::string& x, const std::string& icon) {
+void CResultButton::setLabel(const std::string& x, const std::string& icon, const std::string& font) {
 
     if (const auto FONT_SIZE = Hyprtoolkit::CFontSize{Hyprtoolkit::CFontSize::HT_FONT_TEXT}.ptSize(); FONT_SIZE != m_lastFontSize)
         updatedFontSize();
@@ -88,7 +88,7 @@ void CResultButton::setLabel(const std::string& x, const std::string& icon) {
     if (x != m_lastLabel) {
         m_lastLabel = x;
 
-        m_label->rebuild()->text(std::string{x})->commence();
+        m_label->rebuild()->text(std::string{x})->fontFamily(std::string{font})->commence();
     }
 }
 

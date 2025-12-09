@@ -7,4 +7,5 @@ enum eFinderTypes : uint8_t {
     FINDER_UNICODE = 1,
     FINDER_MATH    = 2,
     FINDER_IPC     = 3,
+    FINDER_FONT    = 4,
 };
