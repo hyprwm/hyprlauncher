@@ -87,16 +87,27 @@ CUI::CUI(bool open) : m_openByDefault(open) {
     m_window->m_rootElement->addChild(m_background);
 
     m_window->m_events.keyboardKey.listenStatic([this](Hyprtoolkit::Input::SKeyboardKeyEvent e) {
-        if (e.xkbKeysym == XKB_KEY_Escape)
+        if (e.xkbKeysym == XKB_KEY_Escape && e.down)
             setWindowOpen(false);
-        else if (e.xkbKeysym == XKB_KEY_Down || e.xkbKeysym == XKB_KEY_Tab) {
+        else if (e.xkbKeysym == XKB_KEY_Down && e.down) {
             if (m_activeElementId + 1 < m_currentResults.size())
                 m_activeElementId++;
             updateActive();
-        } else if (e.xkbKeysym == XKB_KEY_Up || e.xkbKeysym == XKB_KEY_ISO_Left_Tab) {
+        } else if (e.xkbKeysym == XKB_KEY_Up && e.down) {
             if (m_activeElementId > 0)
                 m_activeElementId--;
             updateActive();
+        } else if (e.xkbKeysym == XKB_KEY_Tab && e.down) {
+            if (!(e.modMask & Hyprtoolkit::Input::HT_MODIFIER_SHIFT)) {
+                if (m_activeElementId + 1 < m_currentResults.size())
+                    m_activeElementId++;
+                updateActive();
+            }
+        } else if (!e.down && (e.modMask & Hyprtoolkit::Input::HT_MODIFIER_SHIFT)) {
+            if (m_activeElementId > 0)
+                m_activeElementId--;
+            updateActive();
+
         } else if (e.xkbKeysym == XKB_KEY_Return)
             onSelected();
     });
