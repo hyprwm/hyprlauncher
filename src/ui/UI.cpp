@@ -37,7 +37,14 @@ CUI::CUI(bool open) : m_openByDefault(open) {
 
     m_inputBox = Hyprtoolkit::CTextboxBuilder::begin()
                      ->placeholder(I18n::localize(I18n::TXT_KEY_SEARCH_SOMETHING, {}))
-                     ->onTextEdited([](SP<Hyprtoolkit::CTextboxElement>, const std::string& query) { g_queryProcessor->scheduleQueryUpdate(query); })
+                     ->onTextEdited([](SP<Hyprtoolkit::CTextboxElement> e, const std::string& query) {
+                         std::string cleaned = query;
+                         std::erase_if(cleaned, [](char c) { return c == '\t'; });
+                         if (cleaned != query)
+                             e->rebuild()->defaultText(std::move(cleaned))->commence();
+
+                         g_queryProcessor->scheduleQueryUpdate(cleaned);
+                     })
                      ->size({Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, Hyprtoolkit::CDynamicSize::HT_SIZE_ABSOLUTE, {1.F, 28.F}})
                      ->multiline(false)
                      ->commence();
@@ -82,11 +89,11 @@ CUI::CUI(bool open) : m_openByDefault(open) {
     m_window->m_events.keyboardKey.listenStatic([this](Hyprtoolkit::Input::SKeyboardKeyEvent e) {
         if (e.xkbKeysym == XKB_KEY_Escape)
             setWindowOpen(false);
-        else if (e.xkbKeysym == XKB_KEY_Down) {
+        else if (e.xkbKeysym == XKB_KEY_Down || e.xkbKeysym == XKB_KEY_Tab) {
             if (m_activeElementId + 1 < m_currentResults.size())
                 m_activeElementId++;
             updateActive();
-        } else if (e.xkbKeysym == XKB_KEY_Up) {
+        } else if (e.xkbKeysym == XKB_KEY_Up || e.xkbKeysym == XKB_KEY_ISO_Left_Tab) {
             if (m_activeElementId > 0)
                 m_activeElementId--;
             updateActive();
