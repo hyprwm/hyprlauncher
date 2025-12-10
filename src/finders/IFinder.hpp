@@ -12,6 +12,7 @@ struct SFinderResult {
     std::string                icon;
     SP<IFinderResult>          result;
     std::optional<std::string> overrideFont;
+    bool                       hasIcon = false;
 };
 
 constexpr const size_t MAX_RESULTS_PER_FINDER = 15;

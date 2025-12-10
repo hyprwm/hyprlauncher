@@ -275,6 +275,7 @@ std::vector<SFinderResult> CDesktopFinder::getResultsForQuery(const std::string&
             .label  = p->m_name,
             .icon   = *PICONSENABLED ? p->m_icon : "",
             .result = p,
+            .hasIcon = true,
         });
     }
 

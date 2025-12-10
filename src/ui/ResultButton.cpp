@@ -63,24 +63,29 @@ void CResultButton::setActive(bool active) {
         ->commence();
 }
 
-void CResultButton::setLabel(const std::string& x, const std::string& icon, const std::string& font) {
+void CResultButton::setLabel(const std::string& x, const std::string& icon, const std::string& font, bool canHaveIcon) {
 
     if (const auto FONT_SIZE = Hyprtoolkit::CFontSize{Hyprtoolkit::CFontSize::HT_FONT_TEXT}.ptSize(); FONT_SIZE != m_lastFontSize)
         updatedFontSize();
 
     if (icon != m_lastIcon) {
-        m_lastIcon = icon;
+        m_lastIcon = canHaveIcon ? icon : "_____NONEXISTENT___ICON_____";
 
-        auto iconDescription = g_ui->m_backend->systemIcons()->lookupIcon(icon);
+        if (canHaveIcon) {
+            auto iconDescription = g_ui->m_backend->systemIcons()->lookupIcon(icon);
 
-        m_container->clearChildren();
+            m_container->clearChildren();
 
-        if (!iconDescription || !iconDescription->exists()) {
-            m_container->addChild(m_iconPlaceholder);
-            m_container->addChild(m_label);
+            if (!iconDescription || !iconDescription->exists()) {
+                m_container->addChild(m_iconPlaceholder);
+                m_container->addChild(m_label);
+            } else {
+                m_icon->rebuild()->icon(iconDescription)->commence();
+                m_container->addChild(m_icon);
+                m_container->addChild(m_label);
+            }
         } else {
-            m_icon->rebuild()->icon(iconDescription)->commence();
-            m_container->addChild(m_icon);
+            m_container->clearChildren();
             m_container->addChild(m_label);
         }
     }
