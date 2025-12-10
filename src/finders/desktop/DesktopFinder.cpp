@@ -239,6 +239,7 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
     const auto NAME      = extract("Name");
     const auto ICON      = extract("Icon");
     const auto EXEC      = extract("Exec");
+    const auto TERMINAL  = extract("Terminal") == "true";
     const auto NODISPLAY = extract("NoDisplay") == "true";
 
     if (EXEC.empty() || NAME.empty() || NODISPLAY) {
@@ -247,7 +248,10 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
     }
 
     auto& e       = m_desktopEntryCache.emplace_back(makeShared<CDesktopEntry>());
-    e->m_exec     = EXEC;
+    if (TERMINAL)
+        e->m_exec = std::string{"xdg-terminal-exec "}.append(EXEC);
+    else
+        e->m_exec = EXEC;
     e->m_icon     = ICON;
     e->m_name     = NAME;
     e->m_fuzzable = NAME;
