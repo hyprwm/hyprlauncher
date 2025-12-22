@@ -5,6 +5,8 @@
 #include <hyprutils/os/FileDescriptor.hpp>
 #include <filesystem>
 
+#include <filesystem>
+
 class CDesktopEntry;
 class CEntryCache;
 

@@ -80,7 +80,7 @@ class CDesktopEntry : public IFinderResult {
         proc.runAsync();
     }
 
-    std::string m_name, m_exec, m_icon, m_fuzzable;
+    std::string m_name, m_exec, m_icon, m_fuzzable, m_stem;
 
     uint32_t    m_frequency = 0;
 };
@@ -246,11 +246,19 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
         return;
     }
 
+    auto pathStem = path.stem().string();
+
+    if (path.string().starts_with("/home")) {
+        // home paths should override system ones
+        std::erase_if(m_desktopEntryCache, [&pathStem](const auto& e) { return e->m_stem == pathStem; });
+    }
+
     auto& e       = m_desktopEntryCache.emplace_back(makeShared<CDesktopEntry>());
     e->m_exec     = EXEC;
     e->m_icon     = ICON;
     e->m_name     = NAME;
     e->m_fuzzable = NAME;
+    e->m_stem     = std::move(pathStem);
     std::ranges::transform(e->m_fuzzable, e->m_fuzzable.begin(), ::tolower);
     e->m_frequency = m_entryFrequencyCache->getCachedEntry(e->m_fuzzable);
     m_desktopEntryCacheGeneric.emplace_back(e);
