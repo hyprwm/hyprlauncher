@@ -14,7 +14,7 @@
 using namespace Hyprutils::Math;
 using namespace Hyprutils::String;
 
-constexpr const size_t MAX_RESULTS_IN_LAUNCHER = 25;
+constexpr const size_t MAX_RESULTS_IN_LAUNCHER = 50;
 constexpr const char*  DEFAULT_FONT            = "Sans Serif";
 
 CUI::CUI(bool open) : m_openByDefault(open) {

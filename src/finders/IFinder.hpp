@@ -15,7 +15,7 @@ struct SFinderResult {
     bool                       hasIcon = false;
 };
 
-constexpr const size_t MAX_RESULTS_PER_FINDER = 15;
+constexpr const size_t MAX_RESULTS_PER_FINDER = 50;
 
 class IFinder {
   public:
