@@ -1,8 +1,14 @@
 #include "Fuzzy.hpp"
 #include <algorithm>
+#include <cmath>
 #include <thread>
+#include <unordered_set>
 
 #include <unistd.h>
+
+#include <hyprutils/string/VarList2.hpp>
+
+using namespace Hyprutils::String;
 
 static float jaroWinkler(const std::string_view& query, const std::string_view& test) {
     const auto LENGTH_A = query.length();
@@ -52,33 +58,85 @@ static float jaroWinkler(const std::string_view& query, const std::string_view& 
     return (sc<float>(matches) / LENGTH_A + sc<float>(matches) / LENGTH_B + (matches - t) / sc<float>(matches)) / 3.F;
 }
 
-constexpr const float BOOST_THRESHOLD = 0.65F;
-constexpr const float FREQ_SCALE      = 0.03F;
-constexpr const float PREFIX_SCALE    = 0.05F;
-constexpr const float SUBSTR_SCALE    = 0.2F;
+//
+constexpr float MIN_FUZZY_TO_COUNT = 0.9F;
+constexpr float MIN_SALIENT_MATCH  = 0.9F;
+constexpr float POPULARITY_FACTOR  = 0.08F;
+constexpr float NO_SALIENT_PENALTY = 0.05F; // -95% score penalty
 
 //
-static float jaroWinklerFull(const std::string_view& query, const std::string_view& test, float freq) {
-    float score = jaroWinkler(query, test);
+static float tokenBestMatch(std::string_view qt, std::string_view lastQ, const std::unordered_set<std::string_view>& cset, const std::vector<std::string_view>& cTok) {
+    if (qt.empty())
+        return 0.F;
+    if (cset.contains(qt))
+        return 1.F;
 
-    // if the similarity is good enough, we can consider substr and prefix.
-    if (score > BOOST_THRESHOLD || test.contains(query)) {
-        size_t       prefixLen = 0;
-        const size_t MAXPREFIX = 20;
-
-        while (prefixLen < std::min({query.size(), test.size(), MAXPREFIX}) && query[prefixLen] == test[prefixLen]) {
-            ++prefixLen;
-        }
-
-        if (test.contains(query))
-            score += (std::min(test.length(), sc<size_t>(4)) * SUBSTR_SCALE * (1.F - score));
-        if (prefixLen)
-            score += (sc<float>(prefixLen) * PREFIX_SCALE * (1.F - score));
-
-        score += freq * FREQ_SCALE * (1.F - score);
+    if (!lastQ.empty() && qt == lastQ) {
+        for (auto ct : cTok)
+            if (ct.starts_with(qt))
+                return 0.97F; // slightly below exact
     }
 
-    return score;
+    float best = 0.F;
+    for (auto ct : cTok) {
+        best = std::max(best, jaroWinkler(qt, ct));
+    }
+
+    if (best < MIN_FUZZY_TO_COUNT)
+        return 0.F;
+    return (best - MIN_FUZZY_TO_COUNT) / (1.F - MIN_FUZZY_TO_COUNT);
+}
+
+static float scoreCandidate(std::string_view query, std::string_view cand, float freq) {
+    CVarList2                     qTokens(std::string{query}, 0, 's', true, false);
+    CVarList2                     cTokens(std::string{cand}, 0, 's', true, false);
+
+    std::vector<std::string_view> qTok, cTok;
+    qTok.reserve(qTokens.size());
+    cTok.reserve(cTokens.size());
+    for (const auto& q : qTokens) {
+        qTok.emplace_back(q);
+    }
+    for (const auto& c : cTokens) {
+        cTok.emplace_back(c);
+    }
+
+    if (qTok.empty() || cTok.empty())
+        return 0.F;
+
+    std::unordered_set<std::string_view> cset;
+    cset.reserve(cTok.size());
+    for (auto t : cTok) {
+        cset.insert(t);
+    }
+
+    std::string_view lastQ = qTok.back();
+
+    // pick salient token as longest
+    std::string_view salient = qTok[0];
+    for (auto t : qTok) {
+        if (t.size() > salient.size())
+            salient = t;
+    }
+
+    float sum = 0.F;
+    for (auto qt : qTok) {
+        sum += tokenBestMatch(qt, lastQ, cset, cTok);
+    }
+
+    float base = sum / sc<float>(qTok.size()); // normalize it
+
+    // if salient token doesn't match strongly, kill the score
+    float salientMatch = tokenBestMatch(salient, lastQ, cset, cTok);
+    if (salientMatch < MIN_SALIENT_MATCH)
+        base *= NO_SALIENT_PENALTY;
+
+    float lenDiff   = float(std::abs(int(query.size()) - int(cand.size())));
+    float lenFactor = std::exp(-lenDiff / 25.f);
+
+    float popFactor = 1.F + (POPULARITY_FACTOR * std::log1p(std::max(0.F, freq)));
+
+    return base * lenFactor * popFactor;
 }
 
 struct SScoreData {
@@ -89,8 +147,10 @@ struct SScoreData {
 
 static void workerFn(std::vector<SScoreData>& scores, const std::vector<SP<IFinderResult>>& in, const std::string& query, size_t start, size_t end) {
     for (size_t i = start; i < end; ++i) {
-        auto& ref  = scores[i];
-        ref.score  = jaroWinklerFull(query, in[i]->fuzzable(), in[i]->frequency());
+        auto& ref = scores[i];
+
+        ref.score = scoreCandidate(query, in[i]->fuzzable(), in[i]->frequency());
+
         ref.result = in[i];
         ref.idx    = i;
     }
