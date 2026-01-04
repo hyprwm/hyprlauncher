@@ -5,6 +5,7 @@
 #include "finders/math/MathFinder.hpp"
 #include "finders/ipc/IPCFinder.hpp"
 #include "finders/font/FontFinder.hpp"
+#include "finders/fs/FsFinder.hpp"
 #include "socket/ClientSocket.hpp"
 #include "socket/ServerSocket.hpp"
 #include "query/QueryProcessor.hpp"
@@ -107,12 +108,14 @@ int main(int argc, char** argv, char** envp) {
     g_mathFinder    = makeUnique<CMathFinder>();
     g_ipcFinder     = makeUnique<CIPCFinder>();
     g_fontFinder    = makeUnique<CFontFinder>();
+    g_fsFinder      = makeUnique<CFsFinder>();
 
     g_desktopFinder->init();
     g_unicodeFinder->init();
     g_mathFinder->init();
     g_ipcFinder->init();
     g_fontFinder->init();
+    g_fsFinder->init();
 
     socket.reset();
 

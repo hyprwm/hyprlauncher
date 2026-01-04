@@ -280,9 +280,9 @@ std::vector<SFinderResult> CDesktopFinder::getResultsForQuery(const std::string&
         if (!p)
             continue;
         results.emplace_back(SFinderResult{
-            .label  = p->m_name,
-            .icon   = *PICONSENABLED ? p->m_icon : "",
-            .result = p,
+            .label   = p->m_name,
+            .icon    = *PICONSENABLED ? p->m_icon : "",
+            .result  = p,
             .hasIcon = true,
         });
     }
