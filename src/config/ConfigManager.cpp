@@ -2,6 +2,8 @@
 
 #include "../helpers/Log.hpp"
 
+#include <unistd.h>
+
 #include <hyprutils/path/Path.hpp>
 
 CConfigManager::CConfigManager() : m_inotifyFd(inotify_init()) {

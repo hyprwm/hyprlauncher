@@ -9,6 +9,7 @@
 #include <fstream>
 #include <sys/inotify.h>
 #include <sys/poll.h>
+#include <unistd.h>
 #include <unordered_set>
 
 #include <hyprutils/string/String.hpp>
