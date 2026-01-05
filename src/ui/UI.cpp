@@ -20,12 +20,13 @@ constexpr const char*  DEFAULT_FONT            = "Sans Serif";
 CUI::CUI(bool open) : m_openByDefault(open) {
     static auto PGRABFOCUS  = Hyprlang::CSimpleConfigValue<Hyprlang::INT>(g_configManager->m_config.get(), "general:grab_focus");
     static auto PWINDOWSIZE = Hyprlang::CSimpleConfigValue<Hyprlang::VEC2>(g_configManager->m_config.get(), "ui:window_size");
+    static auto PROUNDING  = Hyprlang::CSimpleConfigValue<Hyprlang::INT>(g_configManager->m_config.get(), "ui:rounding");
 
     m_backend = Hyprtoolkit::IBackend::create();
 
     m_background = Hyprtoolkit::CRectangleBuilder::begin()
                        ->color([this] { return m_backend->getPalette()->m_colors.background; })
-                       ->rounding(10)
+                       ->rounding(*PROUNDING)
                        ->borderColor([this] { return m_backend->getPalette()->m_colors.accent.darken(0.2F); })
                        ->borderThickness(1)
                        ->size({Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, {1, 1}})

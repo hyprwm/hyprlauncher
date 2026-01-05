@@ -2,6 +2,9 @@
 #include "../finders/IFinder.hpp"
 
 #include "UI.hpp"
+#include "../config/ConfigManager.hpp"
+
+#include <hyprlang.hpp>
 
 CResultButton::CResultButton() {
     const auto FONT_SIZE = Hyprtoolkit::CFontSize{Hyprtoolkit::CFontSize::HT_FONT_TEXT}.ptSize();
@@ -9,13 +12,15 @@ CResultButton::CResultButton() {
 
     const auto BG_HEIGHT = (FONT_SIZE * 2.F) + 4.F;
 
+    static auto PITEMROUNDING = Hyprlang::CSimpleConfigValue<Hyprlang::INT>(g_configManager->m_config.get(), "ui:item_rounding");
+
     m_background = Hyprtoolkit::CRectangleBuilder::begin()
                        ->color([]() {
                            auto c = g_ui->m_backend->getPalette()->m_colors.accent.darken(0.3F);
                            c.a    = 0.F;
                            return c;
                        })
-                       ->rounding(4)
+                       ->rounding(*PITEMROUNDING)
                        ->size({Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, Hyprtoolkit::CDynamicSize::HT_SIZE_ABSOLUTE, {1.F, BG_HEIGHT}})
                        ->commence();
 
