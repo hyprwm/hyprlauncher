@@ -44,7 +44,7 @@ static std::vector<std::string> parseExplicitFromStdin() {
 
 int main(int argc, char** argv, char** envp) {
 
-    bool                     openByDefault = true, dmenuMode = false;
+    bool                     openByDefault = true, dmenuMode = false, toggle = false;
     std::vector<std::string> explicitOptions;
 
     for (int i = 1; i < argc; ++i) {
@@ -78,6 +78,8 @@ int main(int argc, char** argv, char** envp) {
                 explicitOptions.emplace_back(e);
             }
             ++i;
+        } else if (sv == "-t" || sv == "--toggle") {
+            toggle = true;
         } else {
             Debug::log(ERR, "Unrecognized argument: {}", sv);
             return 1;
@@ -94,7 +96,7 @@ int main(int argc, char** argv, char** envp) {
         if (!explicitOptions.empty())
             socket->sendOpenWithOptions(explicitOptions);
         else
-            socket->sendToggle();
+            toggle ? socket->sendToggle() : socket->sendOpen();
         return 0;
     }
 
