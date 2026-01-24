@@ -15,7 +15,6 @@ using namespace Hyprutils::Math;
 using namespace Hyprutils::String;
 
 constexpr const size_t MAX_RESULTS_IN_LAUNCHER = 50;
-constexpr const char*  DEFAULT_FONT            = "Sans Serif";
 
 CUI::CUI(bool open) : m_openByDefault(open) {
     static auto PGRABFOCUS  = Hyprlang::CSimpleConfigValue<Hyprlang::INT>(g_configManager->m_config.get(), "general:grab_focus");
@@ -131,7 +130,7 @@ void CUI::setWindowOpen(bool open) {
         m_inputBox->rebuild()->defaultText("")->commence();
 
         for (const auto& b : m_resultButtons) {
-            b->setLabel("", "", DEFAULT_FONT, false);
+            b->setLabel("", "", std::nullopt, false);
             b->setActive(false);
         }
 
@@ -168,9 +167,9 @@ void CUI::updateResults(std::vector<SFinderResult>&& results) {
 
     for (size_t i = 0; i < m_resultButtons.size(); ++i) {
         if (m_currentResults.size() <= i)
-            m_resultButtons[i]->setLabel("", "", DEFAULT_FONT, false);
+            m_resultButtons[i]->setLabel("", "", std::nullopt, false);
         else
-            m_resultButtons[i]->setLabel(m_currentResults[i].label, m_currentResults[i].icon, m_currentResults[i].overrideFont.value_or(DEFAULT_FONT), m_currentResults[i].hasIcon);
+            m_resultButtons[i]->setLabel(m_currentResults[i].label, m_currentResults[i].icon, m_currentResults[i].overrideFont, m_currentResults[i].hasIcon);
     }
 
     updateActive();
