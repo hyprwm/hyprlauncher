@@ -83,6 +83,18 @@
         inherit (pkgsFor.${system}) hyprlauncher;
       });
 
+      devShells = eachSystem (system: {
+        default =
+          pkgsFor.${system}.mkShell.override {
+            inherit (self.packages.${system}.default) stdenv;
+          } {
+            name = "hyprlauncher-shell";
+            hardeningDisable = ["fortify"];
+            inputsFrom = [pkgsFor.${system}.hyprlauncher];
+            packages = [pkgsFor.${system}.clang-tools];
+          };
+      });
+
       checks = eachSystem (system: self.packages.${system});
 
       formatter = eachSystem (system: pkgsFor.${system}.alejandra);
