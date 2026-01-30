@@ -13,6 +13,8 @@ class CClientIPCSocket {
     bool m_connected = false;
 
     void sendOpen();
+    void sendClose();
+    void sendToggle();
     void sendOpenWithOptions(const std::vector<std::string>& opts);
 
   private:
