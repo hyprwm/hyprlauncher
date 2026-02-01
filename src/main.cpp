@@ -22,6 +22,7 @@ static void printHelp() {
               << " -d | --daemon              | Do not open after initializing\n"
               << " -o | --options \"a,b,c\"   | Pass an explicit option array\n"
               << " -m | --dmenu               | Pass an option list in dmenu-style (stdin, newline-separated)\n"
+              << " -t | --toggle              | When running with this option, toggle instead of opening\n"
               << " -h | --help                | Print this menu\n"
               << " -v | --version             | Print version info\n"
               << "    | --quiet               | Disable all logging\n"
