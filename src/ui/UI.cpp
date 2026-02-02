@@ -89,7 +89,7 @@ CUI::CUI(bool open) : m_openByDefault(open) {
             if (m_activeElementId > 0)
                 m_activeElementId--;
             updateActive();
-        } else if (e.xkbKeysym == XKB_KEY_Return)
+        } else if (e.xkbKeysym == XKB_KEY_Return || e.xkbKeysym == XKB_KEY_KP_Enter)
             onSelected();
     });
 }
