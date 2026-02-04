@@ -11,6 +11,7 @@
 #include <sys/poll.h>
 #include <unistd.h>
 #include <unordered_set>
+#include <unistd.h>
 
 #include <hyprutils/string/String.hpp>
 #include <hyprutils/os/Process.hpp>
