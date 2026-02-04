@@ -24,7 +24,7 @@ CUI::CUI(bool open) : m_openByDefault(open) {
 
     m_background = Hyprtoolkit::CRectangleBuilder::begin()
                        ->color([this] { return m_backend->getPalette()->m_colors.background; })
-                       ->rounding(10)
+                       ->rounding(m_backend->getPalette()->m_vars.bigRounding)
                        ->borderColor([this] { return m_backend->getPalette()->m_colors.accent.darken(0.2F); })
                        ->borderThickness(1)
                        ->size({Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, {1, 1}})

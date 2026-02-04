@@ -15,7 +15,7 @@ CResultButton::CResultButton() {
                            c.a    = 0.F;
                            return c;
                        })
-                       ->rounding(4)
+                       ->rounding(g_ui->m_backend->getPalette()->m_vars.smallRounding)
                        ->size({Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, Hyprtoolkit::CDynamicSize::HT_SIZE_ABSOLUTE, {1.F, BG_HEIGHT}})
                        ->commence();
 
