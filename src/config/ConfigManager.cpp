@@ -5,8 +5,6 @@
 #include <unistd.h>
 
 #include <hyprutils/path/Path.hpp>
-#include <climits>
-#include <unistd.h>
 
 CConfigManager::CConfigManager() : m_inotifyFd(inotify_init()) {
     const auto CFGPATH = Hyprutils::Path::findConfig("hyprlauncher").first.value_or("");
