@@ -3,6 +3,7 @@
 #include "../helpers/Log.hpp"
 
 #include <unistd.h>
+#include <climits>
 
 #include <hyprutils/path/Path.hpp>
 
