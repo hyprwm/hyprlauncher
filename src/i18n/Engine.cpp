@@ -133,11 +133,11 @@ void I18n::initEngine() {
     // vi_VN (Vietnamese)
     engine.registerEntry("vi_VN", TXT_KEY_SEARCH_SOMETHING, "Tìm kiếm...");
 
-    // zh (Simplified Chinese)
-    engine.registerEntry("zh", TXT_KEY_SEARCH_SOMETHING, "搜索...");
+    // zh_CN (Simplified Chinese)
+    engine.registerEntry("zh_CN", TXT_KEY_SEARCH_SOMETHING, "搜索...");
 
-    // zh_Hant (Traditional Chinese)
-    engine.registerEntry("zh_Hant", TXT_KEY_SEARCH_SOMETHING, "搜尋...");
+    // zh_TW (Traditional Chinese)
+    engine.registerEntry("zh_TW", TXT_KEY_SEARCH_SOMETHING, "搜尋...");
 
     // ne_NP (Nepali)
     engine.registerEntry("ne_NP", TXT_KEY_SEARCH_SOMETHING, "खोज...");
