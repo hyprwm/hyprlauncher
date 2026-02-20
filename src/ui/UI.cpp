@@ -129,10 +129,7 @@ void CUI::setWindowOpen(bool open) {
     if (open) {
         m_inputBox->rebuild()->defaultText("")->commence();
 
-        for (const auto& b : m_resultButtons) {
-            b->setLabel("", "", std::nullopt, false);
-            b->setActive(false);
-        }
+        updateResults({});
 
         m_window->open();
 
