@@ -55,14 +55,27 @@ static float jaroWinkler(const std::string_view& query, const std::string_view& 
         ++k;
     }
 
-    return (sc<float>(matches) / LENGTH_A + sc<float>(matches) / LENGTH_B + (matches - t) / sc<float>(matches)) / 3.F;
+    float jaro = (sc<float>(matches) / LENGTH_A + sc<float>(matches) / LENGTH_B + (matches - t) / sc<float>(matches)) / 3.F;
+
+    // winkler prefix bonus
+    size_t prefixLen = 0;
+    size_t maxPrefix = std::min({LENGTH_A, LENGTH_B, sc<size_t>(4)});
+    for (size_t i = 0; i < maxPrefix; ++i) {
+        if (query[i] == test[i])
+            ++prefixLen;
+        else
+            break;
+    }
+
+    return jaro + (prefixLen * 0.1F * (1.0F - jaro));
 }
 
 //
-constexpr float MIN_FUZZY_TO_COUNT = 0.9F;
-constexpr float MIN_SALIENT_MATCH  = 0.9F;
+constexpr float MIN_FUZZY_TO_COUNT = 0.75F;
+constexpr float MIN_SALIENT_MATCH  = 0.3F;
+constexpr float MIN_TOKEN_MATCH    = 0.15F;
 constexpr float POPULARITY_FACTOR  = 0.08F;
-constexpr float NO_SALIENT_PENALTY = 0.05F; // -95% score penalty
+constexpr float NO_SALIENT_PENALTY = 0.01F;
 
 //
 static float tokenBestMatch(std::string_view qt, std::string_view lastQ, const std::unordered_set<std::string_view>& cset, const std::vector<std::string_view>& cTok) {
@@ -71,17 +84,31 @@ static float tokenBestMatch(std::string_view qt, std::string_view lastQ, const s
     if (cset.contains(qt))
         return 1.F;
 
-    if (!lastQ.empty() && qt == lastQ) {
-        for (auto ct : cTok)
-            if (ct.starts_with(qt))
-                return 0.97F; // slightly below exact
-    }
+    float best             = 0.F;
+    bool  hasExplicitMatch = false; // prefix or substring match
 
-    float best = 0.F;
     for (auto ct : cTok) {
+        // strong prefix match - especially important for the last token (partial typing)
+        if (ct.starts_with(qt)) {
+            hasExplicitMatch = true;
+            if (!lastQ.empty() && qt == lastQ) {
+                // last token prefix match - user is still typing
+                best = std::max(best, 0.95F);
+            } else
+                best = std::max(best, 0.98F);
+        } else if (ct.contains(qt)) {
+            hasExplicitMatch = true;
+            best             = std::max(best, 0.7F);
+        }
+
         best = std::max(best, jaroWinkler(qt, ct));
     }
 
+    // if we have an explicit match (prefix/substring), return the score directly
+    if (hasExplicitMatch)
+        return best;
+
+    // for pure fuzzy matches, require minimum quality
     if (best < MIN_FUZZY_TO_COUNT)
         return 0.F;
     return (best - MIN_FUZZY_TO_COUNT) / (1.F - MIN_FUZZY_TO_COUNT);
@@ -119,10 +146,17 @@ static float scoreCandidate(std::string_view query, std::string_view cand, float
             salient = t;
     }
 
-    float sum = 0.F;
+    float sum      = 0.F;
+    float minMatch = 1.F;
     for (auto qt : qTok) {
-        sum += tokenBestMatch(qt, lastQ, cset, cTok);
+        float match = tokenBestMatch(qt, lastQ, cset, cTok);
+        sum += match;
+        minMatch = std::min(minMatch, match);
     }
+
+    // if ANY token matches poorly, penalize heavily
+    if (minMatch < MIN_TOKEN_MATCH)
+        return 0.F;
 
     float base = sum / sc<float>(qTok.size()); // normalize it
 
