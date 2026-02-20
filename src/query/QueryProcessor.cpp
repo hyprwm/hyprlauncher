@@ -107,8 +107,11 @@ void CQueryProcessor::process() {
     } else
         FINDER = m_overrideFinder;
 
-    if (query.empty() && !m_overrideFinder)
+    if (query.empty() && !m_overrideFinder) {
+        if (g_ui)
+            g_ui->m_backend->addIdle([] mutable { g_ui->updateResults({}); });
         return;
+    }
 
     auto RESULTS = FINDER ? FINDER->getResultsForQuery(eat ? query.substr(1) : query) : std::vector<SFinderResult>{};
 
