@@ -6,6 +6,7 @@
 #include "../finders/unicode/UnicodeFinder.hpp"
 #include "../finders/math/MathFinder.hpp"
 #include "../finders/font/FontFinder.hpp"
+#include "../finders/fs/FsFinder.hpp"
 
 #include <hyprutils/utils/ScopeGuard.hpp>
 
@@ -18,6 +19,8 @@ static WP<IFinder> finderForName(const std::string& x) {
         return g_unicodeFinder;
     if (x == "math")
         return g_mathFinder;
+    if (x == "fs")
+        return g_fsFinder;
     return WP<IFinder>{};
 }
 
@@ -28,6 +31,7 @@ static std::pair<WP<IFinder>, bool> finderForPrefix(const char x) {
     static auto PUNICODEPREFIX = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:unicode_prefix");
     static auto PMATHPREFIX    = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:math_prefix");
     static auto PFONTPREFIX    = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:font_prefix");
+    static auto PFSPREFIX      = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:fs_prefix");
 
     if (x == (*PDESKTOPPREFIX)[0])
         return {g_desktopFinder, true};
@@ -37,6 +41,8 @@ static std::pair<WP<IFinder>, bool> finderForPrefix(const char x) {
         return {g_mathFinder, true};
     if (x == (*PFONTPREFIX)[0])
         return {g_fontFinder, true};
+    if (x == (*PFSPREFIX)[0])
+        return {g_fsFinder, true};
     return {finderForName(*PDEFAULTFINDER), false};
 }
 
