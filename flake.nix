@@ -71,7 +71,7 @@
         system:
         import nixpkgs {
           localSystem.system = system;
-          overlays = with self.overlays; [ default ];
+          overlays = with self.overlays; [ hyprlauncher-with-deps ];
         }
       );
     in

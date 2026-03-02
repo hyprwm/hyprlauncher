@@ -17,7 +17,7 @@ in
 {
   default = inputs.self.overlays.hyprlauncher;
 
-  hyprlauncher = lib.composeManyExtensions [
+  hyprlauncher-with-deps = lib.composeManyExtensions [
     inputs.hyprwire.overlays.default
     inputs.hyprlang.overlays.default
     inputs.hyprutils.overlays.default
@@ -25,18 +25,20 @@ in
     inputs.aquamarine.overlays.default
     inputs.hyprgraphics.overlays.default
     inputs.hyprwayland-scanner.overlays.default
-    (final: prev: {
-      hyprlauncher = prev.callPackage ./default.nix {
-        stdenv = prev.gcc15Stdenv;
-        version =
-          version
-          + "+date="
-          + (mkDate (inputs.self.lastModifiedDate or "19700101"))
-          + "_"
-          + (inputs.self.shortRev or "dirty");
-        inherit (final) hyprlang;
-        shortRev = self.sourceInfo.shortRev or "dirty";
-      };
-    })
+    self.overlays.hyprlauncher
+
   ];
+
+  hyprlauncher = final: prev: {
+    hyprlauncher = prev.callPackage ./default.nix {
+      stdenv = prev.gcc15Stdenv;
+      version =
+        version
+        + "+date="
+        + (mkDate (inputs.self.lastModifiedDate or "19700101"))
+        + "_"
+        + (inputs.self.shortRev or "dirty");
+      shortRev = self.sourceInfo.shortRev or "dirty";
+    };
+  };
 }
