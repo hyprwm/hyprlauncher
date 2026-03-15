@@ -26,6 +26,7 @@ CConfigManager::CConfigManager() : m_inotifyFd(inotify_init()) {
     m_config->addConfigValue("finders:font_prefix", Hyprlang::STRING{"'"});
 
     m_config->addConfigValue("finders:desktop_launch_prefix", Hyprlang::STRING{""});
+    m_config->addConfigValue("finders:desktop_terminal", Hyprlang::STRING{""});
     m_config->addConfigValue("finders:desktop_icons", Hyprlang::INT{1});
 
     m_config->addConfigValue("ui:window_size", Hyprlang::VEC2{400, 260});
