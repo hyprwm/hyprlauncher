@@ -54,13 +54,13 @@ class CDesktopEntry : public IFinderResult {
     }
 
     virtual void run() {
-        static auto            PLAUNCHPREFIX   = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:desktop_launch_prefix");
-        static auto            PTERMINALPREFIX = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:desktop_terminal");
-        const std::string_view LAUNCH_PREFIX   = *PLAUNCHPREFIX;
-        const std::string_view TERMINAL_PREFIX = *PTERMINALPREFIX;
+        static auto            PLAUNCHPREFIX = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:desktop_launch_prefix");
+        static auto            PTERMINALEXEC = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:desktop_terminal");
+        const std::string_view LAUNCH_PREFIX = *PLAUNCHPREFIX;
+        const std::string_view TERMINAL_EXEC = *PTERMINALEXEC;
 
         auto                   toExec = std::format("{}{}{}", LAUNCH_PREFIX.empty() ? std::string{""} : std::string{LAUNCH_PREFIX} + std::string{" "},
-                                  m_terminal && !TERMINAL_PREFIX.empty() ? std::string{TERMINAL_PREFIX} + std::string{" "} : std::string{""}, m_exec);
+                                                    m_terminal && !TERMINAL_EXEC.empty() ? std::string{TERMINAL_EXEC} + std::string{" "} : std::string{""}, m_exec);
 
         Debug::log(TRACE, "Running {}", toExec);
 
