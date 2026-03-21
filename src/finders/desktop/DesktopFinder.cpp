@@ -55,9 +55,12 @@ class CDesktopEntry : public IFinderResult {
 
     virtual void run() {
         static auto            PLAUNCHPREFIX = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:desktop_launch_prefix");
+        static auto            PTERMINALEXEC = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:desktop_terminal");
         const std::string_view LAUNCH_PREFIX = *PLAUNCHPREFIX;
+        const std::string_view TERMINAL_EXEC = *PTERMINALEXEC;
 
-        auto                   toExec = std::format("{}{}", LAUNCH_PREFIX.empty() ? std::string{""} : std::string{LAUNCH_PREFIX} + std::string{" "}, m_exec);
+        auto                   toExec = std::format("{}{}{}", LAUNCH_PREFIX.empty() ? std::string{""} : std::string{LAUNCH_PREFIX} + std::string{" "},
+                                                    m_terminal && !TERMINAL_EXEC.empty() ? std::string{TERMINAL_EXEC} + std::string{" "} : std::string{""}, m_exec);
 
         Debug::log(TRACE, "Running {}", toExec);
 
@@ -82,6 +85,7 @@ class CDesktopEntry : public IFinderResult {
     }
 
     std::string m_name, m_exec, m_icon, m_fuzzable, m_stem;
+    bool        m_terminal = false;
 
     uint32_t    m_frequency = 0;
 };
@@ -241,6 +245,7 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
     const auto ICON      = extract("Icon");
     const auto EXEC      = extract("Exec");
     const auto NODISPLAY = extract("NoDisplay") == "true";
+    const auto TERMINAL  = extract("Terminal") == "true";
 
     if (EXEC.empty() || NAME.empty() || NODISPLAY) {
         Debug::log(TRACE, "desktop: skipping entry, empty name / exec / NoDisplay");
@@ -260,6 +265,7 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
     e->m_name     = NAME;
     e->m_fuzzable = NAME;
     e->m_stem     = std::move(pathStem);
+    e->m_terminal = TERMINAL;
     std::ranges::transform(e->m_fuzzable, e->m_fuzzable.begin(), ::tolower);
     e->m_frequency = m_entryFrequencyCache->getCachedEntry(e->m_fuzzable);
     m_desktopEntryCacheGeneric.emplace_back(e);
