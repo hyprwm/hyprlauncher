@@ -14,8 +14,8 @@ class CFontEntry : public IFinderResult {
     CFontEntry()          = default;
     virtual ~CFontEntry() = default;
 
-    virtual const std::string& fuzzable() {
-        return m_fuzzable;
+    virtual const std::vector<std::string>& fuzzables() {
+        return m_fuzzables;
     }
 
     virtual eFinderTypes type() {
@@ -33,7 +33,8 @@ class CFontEntry : public IFinderResult {
         proc.runAsync();
     }
 
-    std::string m_font, m_fuzzable;
+    std::string              m_font;
+    std::vector<std::string> m_fuzzables;
 };
 
 CFontFinder::CFontFinder() : m_valid(FcInit()) {
@@ -69,10 +70,9 @@ void CFontFinder::refreshFonts() {
             if (!family || !style)
                 continue;
 
-            auto e        = m_entries.emplace_back(makeShared<CFontEntry>());
-            e->m_font     = std::format("{} {}", (char*)family, (char*)style);
-            e->m_fuzzable = e->m_font;
-            std::ranges::transform(e->m_fuzzable, e->m_fuzzable.begin(), ::tolower);
+            auto e         = m_entries.emplace_back(makeShared<CFontEntry>());
+            e->m_font      = std::format("{} {}", (char*)family, (char*)style);
+            e->m_fuzzables = Fuzzy::createFuzzableStrings({e->m_font});
             m_entriesGeneric.emplace_back(std::move(e));
         }
     }

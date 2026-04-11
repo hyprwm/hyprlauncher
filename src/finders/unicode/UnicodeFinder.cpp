@@ -17,8 +17,8 @@ class CUnicodeEntry : public IFinderResult {
     CUnicodeEntry()          = default;
     virtual ~CUnicodeEntry() = default;
 
-    virtual const std::string& fuzzable() {
-        return m_fuzzable;
+    virtual const std::vector<std::string>& fuzzables() {
+        return m_fuzzables;
     }
 
     virtual eFinderTypes type() {
@@ -43,9 +43,10 @@ class CUnicodeEntry : public IFinderResult {
         proc.runAsync();
     }
 
-    std::string m_name, m_unicode, m_fuzzable;
+    std::string              m_name, m_unicode;
+    std::vector<std::string> m_fuzzables;
 
-    uint32_t    m_frequency = 0;
+    uint32_t                 m_frequency = 0;
 };
 
 static bool isSurrogate(UChar32 cp) {
@@ -86,11 +87,10 @@ void CUnicodeFinder::init() {
         std::string utf8;
         us.toUTF8String(utf8);
 
-        auto& e       = m_unicodeEntryCache.emplace_back(makeShared<CUnicodeEntry>());
-        e->m_unicode  = utf8;
-        e->m_name     = name;
-        e->m_fuzzable = name;
-        std::ranges::transform(e->m_fuzzable, e->m_fuzzable.begin(), ::tolower);
+        auto& e        = m_unicodeEntryCache.emplace_back(makeShared<CUnicodeEntry>());
+        e->m_unicode   = utf8;
+        e->m_name      = name;
+        e->m_fuzzables = Fuzzy::createFuzzableStrings({name});
         std::ranges::transform(e->m_name, e->m_name.begin(), ::toupper);
         e->m_frequency = g_unicodeFinder->m_entryFrequencyCache->getCachedEntry(e->m_unicode);
         m_unicodeEntryCacheGeneric.emplace_back(e);
