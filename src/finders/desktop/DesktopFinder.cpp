@@ -243,6 +243,7 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
     };
 
     const auto NAME      = extract("Name");
+    const auto GEN_NAME  = extract("GenericName");
     const auto ICON      = extract("Icon");
     const auto EXEC      = extract("Exec");
     const auto NODISPLAY = extract("NoDisplay") == "true";
@@ -264,7 +265,7 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
     e->m_exec      = EXEC;
     e->m_icon      = ICON;
     e->m_name      = NAME;
-    e->m_fuzzables = Fuzzy::createFuzzableStrings({NAME});
+    e->m_fuzzables = Fuzzy::createFuzzableStrings({NAME, GEN_NAME});
     e->m_stem      = std::move(pathStem);
     e->m_terminal  = TERMINAL;
     e->m_frequency = m_entryFrequencyCache->getCachedEntry(e->m_name);
