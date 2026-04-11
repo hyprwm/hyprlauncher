@@ -64,8 +64,8 @@ class CDesktopEntry : public IFinderResult {
 
         Debug::log(TRACE, "Running {}", toExec);
 
-        g_desktopFinder->m_entryFrequencyCache->incrementCachedEntry(m_fuzzable);
-        m_frequency = g_desktopFinder->m_entryFrequencyCache->getCachedEntry(m_fuzzable);
+        g_desktopFinder->m_entryFrequencyCache->incrementCachedEntry(m_name);
+        m_frequency = g_desktopFinder->m_entryFrequencyCache->getCachedEntry(m_name);
 
         // replace all funky codes with nothing
         replaceInString(toExec, "%U", "");
@@ -267,7 +267,7 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
     e->m_stem     = std::move(pathStem);
     e->m_terminal = TERMINAL;
     std::ranges::transform(e->m_fuzzable, e->m_fuzzable.begin(), ::tolower);
-    e->m_frequency = m_entryFrequencyCache->getCachedEntry(e->m_fuzzable);
+    e->m_frequency = m_entryFrequencyCache->getCachedEntry(e->m_name);
     m_desktopEntryCacheGeneric.emplace_back(e);
 
     Debug::log(TRACE, "desktop: cached {} with icon {} and exec line of \"{}\"", NAME, ICON, EXEC);
