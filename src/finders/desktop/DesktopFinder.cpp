@@ -37,8 +37,8 @@ class CDesktopEntry : public IFinderResult {
     CDesktopEntry()          = default;
     virtual ~CDesktopEntry() = default;
 
-    virtual const std::string& fuzzable() {
-        return m_fuzzable;
+    virtual const std::vector<std::string>& fuzzables() {
+        return m_fuzzables;
     }
 
     virtual eFinderTypes type() {
@@ -64,8 +64,8 @@ class CDesktopEntry : public IFinderResult {
 
         Debug::log(TRACE, "Running {}", toExec);
 
-        g_desktopFinder->m_entryFrequencyCache->incrementCachedEntry(m_fuzzable);
-        m_frequency = g_desktopFinder->m_entryFrequencyCache->getCachedEntry(m_fuzzable);
+        g_desktopFinder->m_entryFrequencyCache->incrementCachedEntry(m_name);
+        m_frequency = g_desktopFinder->m_entryFrequencyCache->getCachedEntry(m_name);
 
         // replace all funky codes with nothing
         replaceInString(toExec, "%U", "");
@@ -84,10 +84,11 @@ class CDesktopEntry : public IFinderResult {
         proc.runAsync();
     }
 
-    std::string m_name, m_exec, m_icon, m_fuzzable, m_stem;
-    bool        m_terminal = false;
+    std::string              m_name, m_exec, m_icon, m_stem;
+    std::vector<std::string> m_fuzzables;
+    bool                     m_terminal = false;
 
-    uint32_t    m_frequency = 0;
+    uint32_t                 m_frequency = 0;
 };
 
 static std::filesystem::path resolvePath(const std::string& p) {
@@ -242,6 +243,7 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
     };
 
     const auto NAME      = extract("Name");
+    const auto GEN_NAME  = extract("GenericName");
     const auto ICON      = extract("Icon");
     const auto EXEC      = extract("Exec");
     const auto NODISPLAY = extract("NoDisplay") == "true";
@@ -259,15 +261,14 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
         std::erase_if(m_desktopEntryCache, [&pathStem](const auto& e) { return e->m_stem == pathStem; });
     }
 
-    auto& e       = m_desktopEntryCache.emplace_back(makeShared<CDesktopEntry>());
-    e->m_exec     = EXEC;
-    e->m_icon     = ICON;
-    e->m_name     = NAME;
-    e->m_fuzzable = NAME;
-    e->m_stem     = std::move(pathStem);
-    e->m_terminal = TERMINAL;
-    std::ranges::transform(e->m_fuzzable, e->m_fuzzable.begin(), ::tolower);
-    e->m_frequency = m_entryFrequencyCache->getCachedEntry(e->m_fuzzable);
+    auto& e        = m_desktopEntryCache.emplace_back(makeShared<CDesktopEntry>());
+    e->m_exec      = EXEC;
+    e->m_icon      = ICON;
+    e->m_name      = NAME;
+    e->m_fuzzables = Fuzzy::createFuzzableStrings({NAME, GEN_NAME});
+    e->m_stem      = std::move(pathStem);
+    e->m_terminal  = TERMINAL;
+    e->m_frequency = m_entryFrequencyCache->getCachedEntry(e->m_name);
     m_desktopEntryCacheGeneric.emplace_back(e);
 
     Debug::log(TRACE, "desktop: cached {} with icon {} and exec line of \"{}\"", NAME, ICON, EXEC);
