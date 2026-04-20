@@ -38,9 +38,11 @@ CServerIPCSocket::CServerIPCSocket() {
 
             auto x = m_infos.emplace_back(makeShared<CHyprlauncherCoreInfoObject>(m_socket->createObject(m->getObject()->client(), m->getObject(), "hyprlauncher_core_info", seq)));
 
+            x->setDestroy([this, weak = WP<CHyprlauncherCoreInfoObject>{x}] { std::erase(m_infos, weak); });
             x->setOnDestroy([this, weak = WP<CHyprlauncherCoreInfoObject>{x}] { std::erase(m_infos, weak); });
         });
 
+        manager->setDestroy([this, weak = WP<CHyprlauncherCoreManagerObject>{manager}] { std::erase(m_managers, weak); });
         manager->setOnDestroy([this, weak = WP<CHyprlauncherCoreManagerObject>{manager}] { std::erase(m_managers, weak); });
     });
 
