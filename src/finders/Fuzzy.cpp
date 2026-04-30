@@ -183,7 +183,12 @@ static void workerFn(std::vector<SScoreData>& scores, const std::vector<SP<IFind
     for (size_t i = start; i < end; ++i) {
         auto& ref = scores[i];
 
-        ref.score = scoreCandidate(query, in[i]->fuzzable(), in[i]->frequency());
+        float bestScore = 0.F;
+        for (auto const& candidate : in[i]->fuzzables()) {
+            auto score = scoreCandidate(query, candidate, in[i]->frequency());
+            bestScore  = std::max(score, bestScore);
+        }
+        ref.score = bestScore;
 
         ref.result = in[i];
         ref.idx    = i;
@@ -255,4 +260,22 @@ std::vector<SP<IFinderResult>> Fuzzy::getNResults(const std::vector<SP<IFinderRe
         workerFn(scores, in, query, 0, in.size());
 
     return getBestResultsStable(scores, results);
+}
+
+std::vector<std::string> Fuzzy::createFuzzableStrings(std::initializer_list<std::string_view> strings, bool toLowercase) {
+    std::vector<std::string> fuzzables{strings.size()};
+
+    for (auto&& sv : strings) {
+        std::string fuzzable;
+        fuzzable.resize(sv.size());
+
+        if (toLowercase)
+            std::ranges::transform(sv, fuzzable.begin(), ::tolower);
+        else
+            fuzzable.assign(sv);
+
+        fuzzables.emplace_back(std::move(fuzzable));
+    }
+
+    return fuzzables;
 }
