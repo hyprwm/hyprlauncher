@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include <hyprutils/string/VarList2.hpp>
+#include <hyprutils/string/String.hpp>
 
 using namespace Hyprutils::String;
 
@@ -76,6 +77,7 @@ constexpr float MIN_SALIENT_MATCH  = 0.3F;
 constexpr float MIN_TOKEN_MATCH    = 0.15F;
 constexpr float POPULARITY_FACTOR  = 0.08F;
 constexpr float NO_SALIENT_PENALTY = 0.01F;
+constexpr float EXACT_MATCH_SCORE  = 2.0F;
 
 //
 static float tokenBestMatch(std::string_view qt, std::string_view lastQ, const std::unordered_set<std::string_view>& cset, const std::vector<std::string_view>& cTok) {
@@ -115,6 +117,15 @@ static float tokenBestMatch(std::string_view qt, std::string_view lastQ, const s
 }
 
 static float scoreCandidate(std::string_view query, std::string_view cand, float freq) {
+    const float popFactor = 1.F + (POPULARITY_FACTOR * std::log1p(std::max(0.F, freq)));
+
+    // exact matches occupy a reserved band above any achievable fuzzy score, so a popular
+    // partial match can never outrank them; popularity only orders matches within a band
+    std::string queryLower{query};
+    std::ranges::transform(queryLower, queryLower.begin(), ::tolower);
+    if (trim(queryLower) == trim(std::string{cand}))
+        return EXACT_MATCH_SCORE + popFactor;
+
     CVarList2                     qTokens(std::string{query}, 0, 's', true, false);
     CVarList2                     cTokens(std::string{cand}, 0, 's', true, false);
 
@@ -167,8 +178,6 @@ static float scoreCandidate(std::string_view query, std::string_view cand, float
 
     float lenDiff   = float(std::abs(int(query.size()) - int(cand.size())));
     float lenFactor = std::exp(-lenDiff / 25.f);
-
-    float popFactor = 1.F + (POPULARITY_FACTOR * std::log1p(std::max(0.F, freq)));
 
     return base * lenFactor * popFactor;
 }
