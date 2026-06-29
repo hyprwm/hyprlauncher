@@ -279,7 +279,30 @@ std::vector<SFinderResult> CDesktopFinder::getResultsForQuery(const std::string&
 
     std::vector<SFinderResult> results;
 
-    auto                       fuzzed = Fuzzy::getNResults(m_desktopEntryCacheGeneric, query, MAX_RESULTS_PER_FINDER);
+    if (query.empty()) {
+        // Return all entries sorted by frequency (most used first)
+        auto sorted = m_desktopEntryCacheGeneric;
+        std::stable_sort(sorted.begin(), sorted.end(), [](const SP<IFinderResult>& a, const SP<IFinderResult>& b) { return a->frequency() > b->frequency(); });
+
+        size_t count = std::min(sorted.size(), sc<size_t>(MAX_RESULTS_PER_FINDER));
+        results.reserve(count);
+
+        for (size_t i = 0; i < count; ++i) {
+            const auto p = reinterpretPointerCast<CDesktopEntry>(sorted[i]);
+            if (!p)
+                continue;
+            results.emplace_back(SFinderResult{
+                .label   = p->m_name,
+                .icon    = *PICONSENABLED ? p->m_icon : "",
+                .result  = p,
+                .hasIcon = true,
+            });
+        }
+
+        return results;
+    }
+
+    auto fuzzed = Fuzzy::getNResults(m_desktopEntryCacheGeneric, query, MAX_RESULTS_PER_FINDER);
 
     results.reserve(fuzzed.size());
 
