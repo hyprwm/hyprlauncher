@@ -99,8 +99,16 @@ void CQueryProcessor::process() {
     if (!m_overrideFinder) {
         const auto [F, e] = finderForPrefix(query[0]);
 
-        if (e && query.size() == 1)
+        if (e && query.size() == 1) {
+            // Prefix typed alone: show all results from that finder
+            FINDER = F;
+            if (FINDER) {
+                auto RESULTS = FINDER->getResultsForQuery("");
+                if (g_ui && g_ui->m_backend)
+                    g_ui->m_backend->addIdle([r = std::move(RESULTS)] mutable { g_ui->updateResults(std::move(r)); });
+            }
             return;
+        }
 
         FINDER = F;
         eat    = e;
