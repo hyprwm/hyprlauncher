@@ -97,6 +97,25 @@ void CQueryProcessor::process() {
     bool        eat = false;
 
     if (!m_overrideFinder) {
+        if (query.empty()) {
+            // Only show apps on empty query if configured to do so
+            static auto PSHOWONOPEN = Hyprlang::CSimpleConfigValue<Hyprlang::INT>(g_configManager->m_config.get(), "general:show_apps_on_open");
+            if (*PSHOWONOPEN) {
+                static auto PDEFAULTFINDER = Hyprlang::CSimpleConfigValue<Hyprlang::STRING>(g_configManager->m_config.get(), "finders:default_finder");
+                FINDER                     = finderForName(*PDEFAULTFINDER);
+                if (FINDER) {
+                    auto RESULTS = FINDER->getResultsForQuery("");
+                    if (g_ui && g_ui->m_backend)
+                        g_ui->m_backend->addIdle([r = std::move(RESULTS)] mutable { g_ui->updateResults(std::move(r)); });
+                } else if (g_ui) {
+                    g_ui->m_backend->addIdle([] mutable { g_ui->updateResults({}); });
+                }
+            } else if (g_ui) {
+                g_ui->m_backend->addIdle([] mutable { g_ui->updateResults({}); });
+            }
+            return;
+        }
+
         const auto [F, e] = finderForPrefix(query[0]);
 
         if (e && query.size() == 1)
@@ -106,12 +125,6 @@ void CQueryProcessor::process() {
         eat    = e;
     } else
         FINDER = m_overrideFinder;
-
-    if (query.empty() && !m_overrideFinder) {
-        if (g_ui)
-            g_ui->m_backend->addIdle([] mutable { g_ui->updateResults({}); });
-        return;
-    }
 
     auto RESULTS = FINDER ? FINDER->getResultsForQuery(eat ? query.substr(1) : query) : std::vector<SFinderResult>{};
 

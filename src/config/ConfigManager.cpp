@@ -14,6 +14,7 @@ CConfigManager::CConfigManager() : m_inotifyFd(inotify_init()) {
     m_config = makeUnique<Hyprlang::CConfig>(CFGPATH.c_str(), Hyprlang::SConfigOptions{.allowMissingConfig = true});
 
     m_config->addConfigValue("general:grab_focus", Hyprlang::INT{1});
+    m_config->addConfigValue("general:show_apps_on_open", Hyprlang::INT{0});
 
     m_config->addConfigValue("locale:override", Hyprlang::STRING{""});
 
