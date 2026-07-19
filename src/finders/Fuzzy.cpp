@@ -272,7 +272,8 @@ std::vector<SP<IFinderResult>> Fuzzy::getNResults(const std::vector<SP<IFinderRe
 }
 
 std::vector<std::string> Fuzzy::createFuzzableStrings(std::initializer_list<std::string_view> strings, bool toLowercase) {
-    std::vector<std::string> fuzzables{strings.size()};
+    std::vector<std::string> fuzzables{};
+    fuzzables.reserve(strings.size());
 
     for (auto&& sv : strings) {
         std::string fuzzable;
