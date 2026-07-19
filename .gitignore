@@ -27,3 +27,6 @@ protocols/*.hpp
 
 *.inc
 src/renderer/gl/shaders/Shaders.hpp
+
+.envrc
+.direnv/
