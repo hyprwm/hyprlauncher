@@ -274,8 +274,7 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
     std::vector<std::string_view> strings  = {NAME, GEN_NAME};
     const std::string_view        KEYWORDS = extract("Keywords");
     if (!KEYWORDS.empty()) {
-        // FIXME: don't copy once hyprutils can accept a string_view!!
-        CVarList2 keywords(std::string{KEYWORDS}, 0, ';', true);
+        CVarList2 keywords(KEYWORDS, 0, ';', true);
         for (const auto& k : keywords) {
             strings.emplace_back(k);
         }

@@ -26,7 +26,7 @@ pkg_check_modules(
   hyprtoolkit
   pixman-1
   libdrm
-  hyprutils>=0.10.2
+  hyprutils>=0.12.0
   hyprwire
   icu-uc
   hyprlang
