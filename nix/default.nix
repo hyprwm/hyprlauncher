@@ -11,9 +11,11 @@
   aquamarine,
   cairo,
   pixman,
+  pango,
   hyprtoolkit,
   hyprgraphics,
   libqalculate,
+  libGL,
   wayland,
   wayland-protocols,
   wayland-scanner,
@@ -48,6 +50,8 @@ stdenv.mkDerivation {
     aquamarine
     pixman
     cairo
+    pango
+    libGL
   ];
 
   cmakeFlags = lib.mapAttrsToList lib.cmakeFeature {

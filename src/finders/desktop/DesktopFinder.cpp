@@ -15,6 +15,7 @@
 #include <hyprutils/string/String.hpp>
 #include <hyprutils/os/Process.hpp>
 #include <hyprutils/string/ConstVarList.hpp>
+#include <hyprutils/string/VarList2.hpp>
 
 using namespace Hyprutils::String;
 using namespace Hyprutils::OS;
@@ -60,7 +61,7 @@ class CDesktopEntry : public IFinderResult {
         const std::string_view TERMINAL_EXEC = *PTERMINALEXEC;
 
         auto                   toExec = std::format("{}{}{}", LAUNCH_PREFIX.empty() ? std::string{""} : std::string{LAUNCH_PREFIX} + std::string{" "},
-                                                    m_terminal && !TERMINAL_EXEC.empty() ? std::string{TERMINAL_EXEC} + std::string{" "} : std::string{""}, m_exec);
+                                  m_terminal && !TERMINAL_EXEC.empty() ? std::string{TERMINAL_EXEC} + std::string{" "} : std::string{""}, m_exec);
 
         Debug::log(TRACE, "Running {}", toExec);
 
@@ -265,10 +266,25 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
     e->m_exec      = EXEC;
     e->m_icon      = ICON;
     e->m_name      = NAME;
-    e->m_fuzzables = Fuzzy::createFuzzableStrings({NAME, GEN_NAME});
     e->m_stem      = std::move(pathStem);
     e->m_terminal  = TERMINAL;
     e->m_frequency = m_entryFrequencyCache->getCachedEntry(e->m_name);
+
+    // create fuzzable strings. Read: name, generic name, but also keywords.
+    std::vector<std::string_view> strings  = {NAME, GEN_NAME};
+    const std::string_view        KEYWORDS = extract("Keywords");
+    if (!KEYWORDS.empty()) {
+        CVarList2 keywords(KEYWORDS, 0, ';', true);
+        for (const auto& k : keywords) {
+            strings.emplace_back(k);
+        }
+
+        // we need to emplace here because CVarList2 will be destroyed and the string_view
+        // refs will become uafs
+        e->m_fuzzables = Fuzzy::createFuzzableStrings(std::move(strings));
+    } else
+        e->m_fuzzables = Fuzzy::createFuzzableStrings(std::move(strings));
+
     m_desktopEntryCacheGeneric.emplace_back(e);
 
     Debug::log(TRACE, "desktop: cached {} with icon {} and exec line of \"{}\"", NAME, ICON, EXEC);
