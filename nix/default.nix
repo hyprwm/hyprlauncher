@@ -3,23 +3,17 @@
   stdenv,
   cmake,
   pkg-config,
-  libdrm,
-  libxkbcommon,
-  hyprlang,
-  hyprutils,
-  hyprwire,
   aquamarine,
-  cairo,
-  pixman,
-  pango,
+  hyprlang,
   hyprtoolkit,
-  hyprgraphics,
+  hyprutils,
+  hyprwayland-scanner,
+  hyprwire,
   libqalculate,
-  libGL,
+  libxkbcommon,
   wayland,
   wayland-protocols,
   wayland-scanner,
-  hyprwayland-scanner,
   version ? "git",
   shortRev ? "",
 }:
@@ -33,26 +27,23 @@ stdenv.mkDerivation {
     cmake
     pkg-config
     hyprwayland-scanner
+    hyprwire
   ];
 
   buildInputs = [
-    libdrm
-    libxkbcommon
+    aquamarine
     libqalculate
+    libxkbcommon
     hyprlang
     hyprutils
     hyprwire
     hyprtoolkit
-    hyprgraphics
     wayland
     wayland-protocols
     wayland-scanner
-    aquamarine
-    pixman
-    cairo
-    pango
-    libGL
   ];
+
+  strictDeps = true;
 
   cmakeFlags = lib.mapAttrsToList lib.cmakeFeature {
     HYPRLAUNCHER_COMMIT = shortRev;
