@@ -7,7 +7,7 @@
 
 class CClientIPCSocket {
   public:
-    CClientIPCSocket();
+    CClientIPCSocket(const std::string& waylandDisplay);
     ~CClientIPCSocket() = default;
 
     bool m_connected = false;

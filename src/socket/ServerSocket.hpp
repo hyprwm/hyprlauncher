@@ -7,8 +7,10 @@
 
 class CServerIPCSocket {
   public:
-    CServerIPCSocket();
+    CServerIPCSocket(const std::string& waylandDisplay);
     ~CServerIPCSocket() = default;
+
+    bool valid() const;
 
     void sendOpenState(bool open);
     void sendSelectionMade(const std::string& s);

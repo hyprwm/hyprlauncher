@@ -1,22 +1,19 @@
 #include "ServerSocket.hpp"
+#include "SocketPath.hpp"
 #include "../ui/UI.hpp"
 #include "../query/QueryProcessor.hpp"
 #include "../finders/ipc/IPCFinder.hpp"
 
-#include <cstdlib>
 #include <filesystem>
-
-constexpr const char*            SOCKET_NAME = ".hyprlauncher.sock";
 
 static SP<CHyprlauncherCoreImpl> g_coreImpl;
 
-CServerIPCSocket::CServerIPCSocket() {
-    const auto RTDIR = getenv("XDG_RUNTIME_DIR");
-
-    if (!RTDIR)
+CServerIPCSocket::CServerIPCSocket(const std::string& waylandDisplay) {
+    const auto socketPath = socketPathForDisplay(waylandDisplay);
+    if (!socketPath)
         return;
 
-    m_socketPath = RTDIR + std::string{"/"} + SOCKET_NAME;
+    m_socketPath = *socketPath;
 
     std::error_code ec;
     std::filesystem::remove(m_socketPath, ec);
@@ -47,6 +44,10 @@ CServerIPCSocket::CServerIPCSocket() {
     });
 
     m_socket->addImplementation(g_coreImpl);
+}
+
+bool CServerIPCSocket::valid() const {
+    return !!m_socket;
 }
 
 void CServerIPCSocket::setOpenState(uint32_t state) {

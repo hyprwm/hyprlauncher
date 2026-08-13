@@ -1,18 +1,16 @@
 #include "ClientSocket.hpp"
+#include "SocketPath.hpp"
 
-#include <cstdlib>
 #include <print>
 
-constexpr const char*             SOCKET_NAME = ".hyprlauncher.sock";
 static SP<CCHyprlauncherCoreImpl> g_coreImpl;
 
-CClientIPCSocket::CClientIPCSocket() {
-    const auto RTDIR = getenv("XDG_RUNTIME_DIR");
-
-    if (!RTDIR)
+CClientIPCSocket::CClientIPCSocket(const std::string& waylandDisplay) {
+    const auto socketPath = socketPathForDisplay(waylandDisplay);
+    if (!socketPath)
         return;
 
-    m_socketPath = RTDIR + std::string{"/"} + SOCKET_NAME;
+    m_socketPath = *socketPath;
 
     m_socket = Hyprwire::IClientSocket::open(m_socketPath);
 

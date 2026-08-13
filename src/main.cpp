@@ -12,10 +12,15 @@
 #include "i18n/Engine.hpp"
 
 #include <iostream>
+#include <chrono>
+#include <cstdlib>
+#include <thread>
 
+#include <hyprutils/os/ProcLock.hpp>
 #include <hyprutils/string/ConstVarList.hpp>
 
 using namespace Hyprutils::String;
+using namespace Hyprutils::OS;
 
 static void printHelp() {
     std::cout << "Hyprlauncher usage: hyprlauncher [arg [...]].\n\nArguments:\n"
@@ -43,6 +48,18 @@ static std::vector<std::string> parseExplicitFromStdin() {
     }
     Debug::log(TRACE, "Read {} options from stdin", result.size());
     return result;
+}
+
+static const char* procLockErrorString(CProcLock::eProcLockObtainingError error) {
+    switch (error) {
+        case CProcLock::eProcLockObtainingError::ALREADY_TAKEN: return "lock already taken by this process";
+        case CProcLock::eProcLockObtainingError::NO_ENVIRONMENT: return "XDG_RUNTIME_DIR is unset";
+        case CProcLock::eProcLockObtainingError::ALREADY_RUNNING: return "another instance is running";
+        case CProcLock::eProcLockObtainingError::PERMISSIONS_INSUFFICIENT: return "insufficient permissions for runtime lock";
+        case CProcLock::eProcLockObtainingError::UNKNOWN: return "unknown error";
+    }
+
+    return "unknown error";
 }
 
 int main(int argc, char** argv, char** envp) {
@@ -89,12 +106,28 @@ int main(int argc, char** argv, char** envp) {
         }
     }
 
-    auto socket = makeShared<CClientIPCSocket>();
-
     if (dmenuMode)
         explicitOptions = parseExplicitFromStdin();
 
-    if (socket->m_connected) {
+    const auto WAYLAND_DISPLAY_ENV = getenv("WAYLAND_DISPLAY");
+    const auto WAYLAND_DISPLAY     = WAYLAND_DISPLAY_ENV ? std::string{WAYLAND_DISPLAY_ENV} : std::string{};
+
+    CProcLock  procLock{"hyprlauncher", {{"WAYLAND_DISPLAY", WAYLAND_DISPLAY}}};
+    const auto lockResult = procLock.obtain(CProcLock::eProcLockFlags::EXCLUSIVE);
+
+    if (!lockResult) {
+        if (lockResult.error() != CProcLock::eProcLockObtainingError::ALREADY_RUNNING) {
+            Debug::log(ERR, "Failed to obtain process lock: {}", procLockErrorString(lockResult.error()));
+            return 1;
+        }
+
+        SP<CClientIPCSocket> socket = makeShared<CClientIPCSocket>(WAYLAND_DISPLAY);
+
+        if (!socket->m_connected) {
+            Debug::log(ERR, "Another instance is running, but its IPC socket is unavailable (probably starting up)");
+            return 1;
+        }
+
         Debug::log(TRACE, "Active instance already, opening launcher.");
         if (!explicitOptions.empty())
             socket->sendOpenWithOptions(explicitOptions);
@@ -103,7 +136,11 @@ int main(int argc, char** argv, char** envp) {
         return 0;
     }
 
-    g_serverIPCSocket = makeUnique<CServerIPCSocket>();
+    g_serverIPCSocket = makeUnique<CServerIPCSocket>(WAYLAND_DISPLAY);
+    if (!g_serverIPCSocket->valid()) {
+        Debug::log(ERR, "Failed to open IPC server socket");
+        return 1;
+    }
 
     g_desktopFinder = makeUnique<CDesktopFinder>();
     g_unicodeFinder = makeUnique<CUnicodeFinder>();
@@ -116,8 +153,6 @@ int main(int argc, char** argv, char** envp) {
     g_mathFinder->init();
     g_ipcFinder->init();
     g_fontFinder->init();
-
-    socket.reset();
 
     I18n::initEngine();
 
