@@ -5,6 +5,7 @@
 #include "../../config/ConfigManager.hpp"
 
 #include <algorithm>
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <sys/inotify.h>
@@ -61,7 +62,7 @@ class CDesktopEntry : public IFinderResult {
         const std::string_view TERMINAL_EXEC = *PTERMINALEXEC;
 
         auto                   toExec = std::format("{}{}{}", LAUNCH_PREFIX.empty() ? std::string{""} : std::string{LAUNCH_PREFIX} + std::string{" "},
-                                  m_terminal && !TERMINAL_EXEC.empty() ? std::string{TERMINAL_EXEC} + std::string{" "} : std::string{""}, m_exec);
+                                                    m_terminal && !TERMINAL_EXEC.empty() ? std::string{TERMINAL_EXEC} + std::string{" "} : std::string{""}, m_exec);
 
         Debug::log(TRACE, "Running {}", toExec);
 
@@ -104,6 +105,56 @@ static std::filesystem::path resolvePath(const std::string& p) {
     return std::filesystem::path(HOME) / p.substr(2);
 }
 
+using SymlinkWatchMap = std::unordered_map<std::filesystem::path, std::unordered_set<std::string>>;
+
+static SymlinkWatchMap collectSymlinkWatches(const std::filesystem::path& path) {
+    constexpr size_t MAX_SYMLINKS = 40;
+    SymlinkWatchMap  watches;
+    std::error_code  ec;
+    auto             pending = std::filesystem::absolute(path, ec).lexically_normal();
+
+    if (ec)
+        return watches;
+
+    for (size_t followed = 0; followed < MAX_SYMLINKS; ++followed) {
+        auto prefix       = pending.root_path();
+        bool foundSymlink = false;
+
+        for (auto it = pending.begin(); it != pending.end(); ++it) {
+            if (*it == pending.root_path())
+                continue;
+
+            prefix /= *it;
+
+            const auto status = std::filesystem::symlink_status(prefix, ec);
+            if (ec)
+                return watches;
+            if (!std::filesystem::is_symlink(status))
+                continue;
+
+            watches[prefix.parent_path()].emplace(prefix.filename().string());
+
+            const auto target = std::filesystem::read_symlink(prefix, ec);
+            if (ec)
+                return watches;
+
+            std::filesystem::path suffix;
+            for (++it; it != pending.end(); ++it)
+                suffix /= *it;
+
+            pending      = (target.is_absolute() ? target : prefix.parent_path() / target) / suffix;
+            pending      = pending.lexically_normal();
+            foundSymlink = true;
+            break;
+        }
+
+        if (!foundSymlink)
+            break;
+    }
+
+    return watches;
+}
+
 CDesktopFinder::CDesktopFinder() : m_inotifyFd(inotify_init()), m_entryFrequencyCache(makeUnique<CEntryCache>("desktop")) {
     if (const auto DATA_HOME = getenv("XDG_DATA_HOME"))
         m_envPaths.emplace_back(std::filesystem::path(DATA_HOME) / "applications");
@@ -126,8 +177,49 @@ void CDesktopFinder::init() {
 }
 
 void CDesktopFinder::onInotifyEvent() {
-    recache();
+    alignas(inotify_event) std::array<char, 16 * 1024> buffer        = {};
+    bool                                               shouldRecache = false;
 
+    while (true) {
+        pollfd pfd = {
+            .fd     = m_inotifyFd.get(),
+            .events = POLLIN,
+        };
+
+        if (poll(&pfd, 1, 0) <= 0 || !(pfd.revents & POLLIN))
+            break;
+
+        const auto bytesRead = read(m_inotifyFd.get(), buffer.data(), buffer.size());
+        if (bytesRead <= 0)
+            break;
+
+        for (size_t offset = 0; offset + sizeof(inotify_event) <= sc<size_t>(bytesRead);) {
+            const auto* event     = rc<const inotify_event*>(buffer.data() + offset);
+            const auto  eventSize = sizeof(inotify_event) + event->len;
+            if (offset + eventSize > sc<size_t>(bytesRead))
+                break;
+
+            if (event->mask & IN_Q_OVERFLOW)
+                shouldRecache = true;
+
+            if (m_contentWatches.contains(event->wd))
+                shouldRecache = true;
+
+            if (const auto rootWatch = m_rootWatchNames.find(event->wd); rootWatch != m_rootWatchNames.end()) {
+                if (event->mask & (IN_DELETE_SELF | IN_MOVE_SELF | IN_IGNORED))
+                    shouldRecache = true;
+                else if (event->len && rootWatch->second.contains(event->name))
+                    shouldRecache = true;
+            }
+
+            offset += eventSize;
+        }
+    }
+
+    if (!shouldRecache)
+        return;
+
+    recache();
     replantWatch();
 }
 
@@ -184,6 +276,8 @@ void CDesktopFinder::replantWatch() {
     }
 
     m_watches.clear();
+    m_contentWatches.clear();
+    m_rootWatchNames.clear();
 
     while (true) {
         pollfd pfd = {
@@ -191,19 +285,47 @@ void CDesktopFinder::replantWatch() {
             .events = POLLIN,
         };
 
-        poll(&pfd, 1, 0);
-
-        if (!(pfd.revents & POLLIN))
+        if (poll(&pfd, 1, 0) <= 0 || !(pfd.revents & POLLIN))
             break;
 
-        static char buf[1024];
-
-        read(m_inotifyFd.get(), buf, 1023);
+        std::array<char, 1024> buffer = {};
+        if (read(m_inotifyFd.get(), buffer.data(), buffer.size()) <= 0)
+            break;
     }
 
-    for (const auto& p : m_desktopEntryPaths) {
-        m_watches.emplace_back(inotify_add_watch(m_inotifyFd.get(), p.c_str(), IN_MODIFY | IN_DONT_FOLLOW | IN_CREATE | IN_DELETE | IN_MOVE));
+    std::unordered_set<int> watches;
+    const auto              addWatch = [this, &watches](const std::filesystem::path& path, uint32_t mask) -> int {
+        const int watch = inotify_add_watch(m_inotifyFd.get(), path.c_str(), mask | IN_MASK_ADD);
+        if (watch < 0) {
+            Debug::log(WARN, "desktop: failed to watch {}", path.string());
+            return -1;
+        }
+
+        watches.emplace(watch);
+        return watch;
+    };
+
+    constexpr uint32_t CONTENT_MASK = IN_MODIFY | IN_CLOSE_WRITE | IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE_SELF | IN_MOVE_SELF;
+    for (const auto& path : m_desktopEntryPaths) {
+        const int watch = addWatch(path, CONTENT_MASK);
+        if (watch >= 0)
+            m_contentWatches.emplace(watch);
     }
+
+    SymlinkWatchMap symlinkWatches;
+    for (const auto& path : m_envPaths) {
+        for (auto&& [parent, names] : collectSymlinkWatches(path))
+            symlinkWatches[parent].insert(names.begin(), names.end());
+    }
+
+    constexpr uint32_t ROOT_MASK = IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO | IN_ATTRIB | IN_DELETE_SELF | IN_MOVE_SELF;
+    for (const auto& [parent, names] : symlinkWatches) {
+        const int watch = addWatch(parent, ROOT_MASK | IN_DONT_FOLLOW);
+        if (watch >= 0)
+            m_rootWatchNames[watch].insert(names.begin(), names.end());
+    }
+
+    m_watches.assign(watches.begin(), watches.end());
 }
 
 void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {

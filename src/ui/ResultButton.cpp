@@ -23,9 +23,9 @@ CResultButton::CResultButton() {
         Hyprtoolkit::CRowLayoutBuilder::begin()->size({Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, {1, 1}})->gap(4)->commence();
     m_container->setMargin(4);
 
-    m_icon = Hyprtoolkit::CImageBuilder::begin()
-                 ->size({Hyprtoolkit::CDynamicSize::HT_SIZE_ABSOLUTE, Hyprtoolkit::CDynamicSize::HT_SIZE_ABSOLUTE, {0.7F * BG_HEIGHT, 0.7F * BG_HEIGHT}})
-                 ->commence();
+    m_icon            = Hyprtoolkit::CImageBuilder::begin()
+                            ->size({Hyprtoolkit::CDynamicSize::HT_SIZE_ABSOLUTE, Hyprtoolkit::CDynamicSize::HT_SIZE_ABSOLUTE, {0.7F * BG_HEIGHT, 0.7F * BG_HEIGHT}})
+                            ->commence();
     m_iconPlaceholder = Hyprtoolkit::CNullBuilder::begin()
                             ->size({Hyprtoolkit::CDynamicSize::HT_SIZE_ABSOLUTE, Hyprtoolkit::CDynamicSize::HT_SIZE_ABSOLUTE, {0.7F * BG_HEIGHT, 0.7F * BG_HEIGHT}})
                             ->commence();

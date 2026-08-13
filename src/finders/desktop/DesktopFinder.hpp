@@ -4,8 +4,8 @@
 
 #include <hyprutils/os/FileDescriptor.hpp>
 #include <filesystem>
-
-#include <filesystem>
+#include <unordered_map>
+#include <unordered_set>
 
 class CDesktopEntry;
 class CEntryCache;
@@ -23,19 +23,21 @@ class CDesktopFinder : public IFinder {
     void                               onInotifyEvent();
 
   private:
-    std::vector<SP<CDesktopEntry>>     m_desktopEntryCache;
-    std::vector<SP<IFinderResult>>     m_desktopEntryCacheGeneric;
+    std::vector<SP<CDesktopEntry>>                           m_desktopEntryCache;
+    std::vector<SP<IFinderResult>>                           m_desktopEntryCacheGeneric;
 
-    std::vector<std::filesystem::path> m_desktopEntryPaths;
-    std::vector<int>                   m_watches;
+    std::vector<std::filesystem::path>                       m_desktopEntryPaths;
+    std::vector<int>                                         m_watches;
+    std::unordered_set<int>                                  m_contentWatches;
+    std::unordered_map<int, std::unordered_set<std::string>> m_rootWatchNames;
 
-    std::vector<std::filesystem::path> m_envPaths;
+    std::vector<std::filesystem::path>                       m_envPaths;
 
-    UP<CEntryCache>                    m_entryFrequencyCache;
+    UP<CEntryCache>                                          m_entryFrequencyCache;
 
-    void                               cacheEntry(const std::filesystem::path& path);
-    void                               replantWatch();
-    void                               recache();
+    void                                                     cacheEntry(const std::filesystem::path& path);
+    void                                                     replantWatch();
+    void                                                     recache();
 
     friend class CDesktopEntry;
 };
