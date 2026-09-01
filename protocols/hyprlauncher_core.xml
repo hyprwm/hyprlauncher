@@ -54,6 +54,13 @@
       <arg name="options" type="array varchar" summary="option array"/>
     </c2s>
 
+    <c2s name="override_finder">
+      <description summary="Override the launcher finder">
+            Override the launcher finder. When launcher is closed, the finder is reset.
+      </description>
+      <arg name="finder" type="varchar" summary="finder name"/>
+    </c2s>
+
     <c2s name="get_info_object">
       <description summary="Get launcher's info object">
             Gets the launcher info object. That object will return some data about

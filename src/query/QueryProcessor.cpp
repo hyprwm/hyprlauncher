@@ -90,6 +90,10 @@ void CQueryProcessor::overrideQueryProvider(IFinder* finder) {
     ++m_generation;
 }
 
+void CQueryProcessor::overrideQueryProvider(const std::string& finder) {
+    overrideQueryProvider(finderForName(finder));
+}
+
 // Only run on the query thread.
 void CQueryProcessor::process(SQueryRequest&& request) {
     std::lock_guard processingLock(m_processingMutex);

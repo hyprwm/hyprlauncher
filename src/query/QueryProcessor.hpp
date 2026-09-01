@@ -20,6 +20,7 @@ class CQueryProcessor {
 
     void scheduleQueryUpdate(const std::string& str);
     void overrideQueryProvider(IFinder* finder);
+    void overrideQueryProvider(const std::string& finder);
 
   private:
     struct SQueryRequest {

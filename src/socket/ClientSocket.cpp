@@ -81,3 +81,7 @@ void CClientIPCSocket::sendOpenWithOptions(const std::vector<std::string>& opts)
         ;
     }
 }
+
+void CClientIPCSocket::sendOverrideFinder(const std::string& finder) {
+    m_manager->sendOverrideFinder(finder.c_str());
+}
