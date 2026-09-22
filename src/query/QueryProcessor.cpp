@@ -15,6 +15,8 @@ static IFinder* finderForName(const std::string& x) {
         return g_unicodeFinder.get();
     if (x == "math")
         return g_mathFinder.get();
+    if (x == "font")
+        return g_fontFinder.get();
     if (x == "fs")
         return g_fsFinder.get();
     return nullptr;
@@ -79,7 +81,7 @@ void CQueryProcessor::scheduleQueryUpdate(const std::string& str) {
         std::lock_guard lock(m_mutex);
         m_pendingQuery = SQueryRequest{
             .query      = str,
-            .finder     = m_overrideFinder,
+            .finder     = m_overrideFinder ? m_overrideFinder : m_selectFinder,
             .generation = ++m_generation,
         };
     }
@@ -90,6 +92,13 @@ void CQueryProcessor::scheduleQueryUpdate(const std::string& str) {
 void CQueryProcessor::overrideQueryProvider(IFinder* finder) {
     std::lock_guard lock(m_mutex);
     m_overrideFinder = finder;
+    m_pendingQuery.reset();
+    ++m_generation;
+}
+
+void CQueryProcessor::selectQueryProvider(const std::string& finder) {
+    std::lock_guard lock(m_mutex);
+    m_selectFinder = finderForName(finder);
     m_pendingQuery.reset();
     ++m_generation;
 }

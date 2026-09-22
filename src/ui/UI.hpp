@@ -32,6 +32,8 @@ class CUI {
 
     void updateActive();
 
+    void scheduleQueryRefresh();
+
   private:
     void                                  onSelected();
     void                                  scheduleQueryUpdate(const std::string& query);

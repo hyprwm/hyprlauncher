@@ -18,6 +18,7 @@ class CServerIPCSocket {
   private:
     void                                            setOpenState(uint32_t state);
     void                                            openWithOptions(const std::vector<const char*>& options);
+    void                                            selectFinder(const char* finder);
 
     SP<Hyprwire::IServerSocket>                     m_socket;
 

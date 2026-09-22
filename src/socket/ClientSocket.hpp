@@ -16,6 +16,7 @@ class CClientIPCSocket {
     void sendClose();
     void sendToggle();
     void sendOpenWithOptions(const std::vector<std::string>& opts);
+    void sendSelectFinder(const std::string& finder);
 
   private:
     SP<Hyprwire::IClientSocket>         m_socket;

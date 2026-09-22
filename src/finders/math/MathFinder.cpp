@@ -28,7 +28,7 @@ class CMathEntry : public IFinderResult {
     virtual void run() {
         Debug::log(TRACE, "Copying {} with wl-copy", m_result);
 
-        CProcess proc("wl-copy", {m_result});
+        CProcess proc("wl-copy", {"--", m_result});
         proc.runAsync();
     }
 

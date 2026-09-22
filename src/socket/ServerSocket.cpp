@@ -28,6 +28,7 @@ CServerIPCSocket::CServerIPCSocket(const std::string& waylandDisplay) {
 
         manager->setSetOpenState([this](uint32_t state) { setOpenState(state); });
         manager->setOpenWithOptions([this](std::vector<const char*> state) { openWithOptions(state); });
+        manager->setSelectFinder([this](const char* finder) { selectFinder(finder); });
 
         manager->setGetInfoObject([this, m = WP<CHyprlauncherCoreManagerObject>{manager}](uint32_t seq) {
             if (!m)
@@ -66,6 +67,12 @@ void CServerIPCSocket::openWithOptions(const std::vector<const char*>& options) 
     g_ipcFinder->setData(options);
     g_queryProcessor->overrideQueryProvider(g_ipcFinder.get());
     g_ui->setWindowOpen(true);
+}
+
+void CServerIPCSocket::selectFinder(const char* finder) {
+    g_queryProcessor->selectQueryProvider(finder);
+    if (g_ui->windowOpen())
+        g_ui->scheduleQueryRefresh();
 }
 
 void CServerIPCSocket::sendOpenState(bool open) {

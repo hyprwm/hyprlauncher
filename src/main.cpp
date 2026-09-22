@@ -28,6 +28,7 @@ static void printHelp() {
               << " -d | --daemon              | Do not open after initializing\n"
               << " -o | --options \"a,b,c\"   | Pass an explicit option array\n"
               << " -m | --dmenu               | Pass an option list in dmenu-style (stdin, newline-separated)\n"
+              << " -f | --finder \"math\"     | Use the specified finder\n"
               << " -t | --toggle              | When running with this option, toggle instead of opening\n"
               << " -h | --help                | Print this menu\n"
               << " -v | --version             | Print version info\n"
@@ -67,6 +68,7 @@ int main(int argc, char** argv, char** envp) {
 
     bool                     openByDefault = true, dmenuMode = false, toggle = false;
     std::vector<std::string> explicitOptions;
+    std::string              selectedFinder = "";
 
     for (int i = 1; i < argc; ++i) {
         std::string_view sv{argv[i]};
@@ -98,6 +100,13 @@ int main(int argc, char** argv, char** envp) {
             for (const auto& e : vars) {
                 explicitOptions.emplace_back(e);
             }
+            ++i;
+        } else if (sv == "-f" || sv == "--finder") {
+            if (i + 1 >= argc) {
+                Debug::log(ERR, "Missing argument for --finder", sv);
+                return 1;
+            }
+            selectedFinder = argv[i + 1];
             ++i;
         } else if (sv == "-t" || sv == "--toggle") {
             toggle = true;
@@ -132,8 +141,10 @@ int main(int argc, char** argv, char** envp) {
         Debug::log(TRACE, "Active instance already, opening launcher.");
         if (!explicitOptions.empty())
             socket->sendOpenWithOptions(explicitOptions);
-        else
+        else {
+            socket->sendSelectFinder(selectedFinder);
             toggle ? socket->sendToggle() : socket->sendOpen();
+        }
         return 0;
     }
 
@@ -163,6 +174,8 @@ int main(int argc, char** argv, char** envp) {
         g_ipcFinder->setData(explicitOptions);
         g_queryProcessor->overrideQueryProvider(g_ipcFinder.get());
     }
+
+    g_queryProcessor->selectQueryProvider(selectedFinder);
 
     g_configManager = makeUnique<CConfigManager>();
     g_configManager->parse();

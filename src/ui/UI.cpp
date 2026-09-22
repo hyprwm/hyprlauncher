@@ -169,6 +169,10 @@ void CUI::scheduleQueryUpdate(const std::string& query) {
     g_queryProcessor->scheduleQueryUpdate(query);
 }
 
+void CUI::scheduleQueryRefresh() {
+    scheduleQueryUpdate(std::string(m_inputBox->currentText()));
+}
+
 bool CUI::windowOpen() {
     return m_open;
 }

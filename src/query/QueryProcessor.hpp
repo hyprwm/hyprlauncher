@@ -20,6 +20,7 @@ class CQueryProcessor {
 
     void scheduleQueryUpdate(const std::string& str);
     void overrideQueryProvider(IFinder* finder);
+    void selectQueryProvider(const std::string& finder);
 
   private:
     struct SQueryRequest {
@@ -37,6 +38,7 @@ class CQueryProcessor {
     std::thread                  m_queryThread;
     std::optional<SQueryRequest> m_pendingQuery;
     IFinder*                     m_overrideFinder = nullptr;
+    IFinder*                     m_selectFinder   = nullptr;
     uint64_t                     m_generation     = 0;
     bool                         m_quit           = false;
 };

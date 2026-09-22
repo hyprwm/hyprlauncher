@@ -54,6 +54,15 @@
       <arg name="options" type="array varchar" summary="option array"/>
     </c2s>
 
+    <c2s name="select_finder">
+      <description summary="Select the launcher finder">
+            Select the launcher finder, disabling prefixes.
+            If a finder is already selected, it will switch directly
+            to the new finder (it will preserve current search value).
+      </description>
+      <arg name="finder" type="varchar" summary="finder name"/>
+    </c2s>
+
     <c2s name="get_info_object">
       <description summary="Get launcher's info object">
             Gets the launcher info object. That object will return some data about
