@@ -8,6 +8,7 @@
 #include <array>
 #include <filesystem>
 #include <fstream>
+#include <string>
 #include <sys/inotify.h>
 #include <sys/poll.h>
 #include <unistd.h>
@@ -61,8 +62,10 @@ class CDesktopEntry : public IFinderResult {
         const std::string_view LAUNCH_PREFIX = *PLAUNCHPREFIX;
         const std::string_view TERMINAL_EXEC = *PTERMINALEXEC;
 
-        auto                   toExec = std::format("{}{}{}", LAUNCH_PREFIX.empty() ? std::string{""} : std::string{LAUNCH_PREFIX} + std::string{" "},
-                                                    m_terminal && !TERMINAL_EXEC.empty() ? std::string{TERMINAL_EXEC} + std::string{" "} : std::string{""}, m_exec);
+        std::string            execPath = m_exec_path.empty() ? "" : "cd " + m_exec_path + " && exec ";
+        auto                   toExec   = execPath +
+            std::format("{}{}{}", LAUNCH_PREFIX.empty() ? std::string{""} : std::string{LAUNCH_PREFIX} + std::string{" "},
+                        m_terminal && !TERMINAL_EXEC.empty() ? std::string{TERMINAL_EXEC} + std::string{" "} : std::string{""}, m_exec);
 
         Debug::log(TRACE, "Running {}", toExec);
 
@@ -86,7 +89,7 @@ class CDesktopEntry : public IFinderResult {
         proc.runAsync();
     }
 
-    std::string              m_name, m_exec, m_icon, m_stem;
+    std::string              m_name, m_exec, m_exec_path, m_icon, m_stem;
     std::vector<std::string> m_fuzzables;
     bool                     m_terminal = false;
 
@@ -368,6 +371,7 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
     const auto NAME      = extract("Name");
     const auto GEN_NAME  = extract("GenericName");
     const auto ICON      = extract("Icon");
+    const auto EXEC_PATH = extract("Path");
     const auto EXEC      = extract("Exec");
     const auto NODISPLAY = extract("NoDisplay") == "true";
     const auto TERMINAL  = extract("Terminal") == "true";
@@ -385,6 +389,7 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
     }
 
     auto& e        = m_desktopEntryCache.emplace_back(makeShared<CDesktopEntry>());
+    e->m_exec_path = EXEC_PATH;
     e->m_exec      = EXEC;
     e->m_icon      = ICON;
     e->m_name      = NAME;
@@ -420,7 +425,7 @@ std::vector<SFinderResult> CDesktopFinder::getResultsForQuery(const std::string&
     if (query.empty()) {
         // Return all entries sorted by frequency (most used first)
         auto sorted = m_desktopEntryCacheGeneric;
-        std::stable_sort(sorted.begin(), sorted.end(), [](const SP<IFinderResult>& a, const SP<IFinderResult>& b) { return a->frequency() > b->frequency(); });
+        std::ranges::stable_sort(sorted, [](const SP<IFinderResult>& a, const SP<IFinderResult>& b) { return a->frequency() > b->frequency(); });
 
         size_t count = std::min(sorted.size(), sc<size_t>(MAX_RESULTS_PER_FINDER));
         results.reserve(count);
