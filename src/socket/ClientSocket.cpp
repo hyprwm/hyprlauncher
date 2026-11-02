@@ -65,7 +65,7 @@ void CClientIPCSocket::sendOpenWithOptions(const std::vector<std::string>& opts)
     m_info->setOpenState([this](uint32_t open) {
         if (!open && !m_canExit) {
             m_canExit = true;
-            std::println("Exited without selection");
+            std::println(stderr, "Exited without selection");
         }
     });
 
