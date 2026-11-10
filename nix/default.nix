@@ -3,15 +3,11 @@
   stdenv,
   cmake,
   pkg-config,
-  aquamarine,
   hyprlang,
   hyprtoolkit,
-  hyprutils,
-  hyprwayland-scanner,
   hyprwire,
   libqalculate,
   libxkbcommon,
-  wayland,
   wayland-protocols,
   wayland-scanner,
   version ? "git",
@@ -26,19 +22,15 @@ stdenv.mkDerivation {
   nativeBuildInputs = [
     cmake
     pkg-config
-    hyprwayland-scanner
     hyprwire
   ];
 
   buildInputs = [
-    aquamarine
     libqalculate
     libxkbcommon
     hyprlang
-    hyprutils
     hyprwire
     hyprtoolkit
-    wayland
     wayland-protocols
     wayland-scanner
   ];
