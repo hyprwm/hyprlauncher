@@ -1,15 +1,96 @@
 #include "Fuzzy.hpp"
 #include <algorithm>
 #include <cmath>
+#include <ranges>
 #include <thread>
-#include <unordered_set>
 
 #include <unistd.h>
 
-#include <hyprutils/string/VarList2.hpp>
 #include <hyprutils/string/String.hpp>
 
 using namespace Hyprutils::String;
+
+namespace {
+
+    class CVarListView : public std::ranges::view_interface<CVarListView> {
+        std::string_view m_str;
+        char             m_sep;
+
+      public:
+        // (removeEmpty = true)
+        CVarListView(std::string_view str, char sep) : m_str(str), m_sep(sep) {}
+
+        class CIterator {
+          private:
+            std::string_view m_str;
+            std::size_t      m_index = -1uz;
+            std::size_t      m_count = 0;
+            char             m_sep;
+
+          public:
+            using iterator_category = std::forward_iterator_tag;
+            using value_type        = std::string_view;
+            using difference_type   = std::ptrdiff_t;
+            using reference         = value_type;
+            using pointer           = value_type;
+
+            CIterator() = default;
+            CIterator(std::string_view str, char sep) : m_str(str), m_sep(sep) {
+                this->operator++();
+            }
+
+            reference operator*() const {
+                return m_str.substr(m_index, m_count);
+            }
+
+            pointer operator->() const {
+                return this->operator*();
+            }
+
+            CIterator& operator++() {
+                m_index += m_count;
+                do {
+                    m_index += 1;
+                    if (m_index >= m_str.size()) {
+                        m_index = -1uz;
+                        return *this;
+                    }
+                } while (isSep(m_str[m_index]));
+
+                m_count = 1;
+
+                while (m_index + m_count < m_str.size() && !isSep(m_str[m_index + m_count]))
+                    m_count += 1;
+
+                return *this;
+            }
+
+            CIterator operator++(int) {
+                auto tmp = *this;
+                ++(*this);
+                return tmp;
+            }
+
+            bool isSep(char c) const {
+                return m_sep == ' ' ? std::isspace(c) : m_sep == '/' ? std::isspace(c) || c == m_sep : c == m_sep;
+            }
+
+            bool operator==(const CIterator& other) const {
+                return m_index == other.m_index;
+            }
+        };
+
+        using iterator = CIterator;
+
+        auto begin() const {
+            return CIterator(m_str, m_sep);
+        }
+        auto end() const {
+            return CIterator();
+        }
+    };
+
+}
 
 static float jaroWinkler(const std::string_view& query, const std::string_view& test) {
     const auto LENGTH_A = query.length();
@@ -18,12 +99,11 @@ static float jaroWinkler(const std::string_view& query, const std::string_view& 
     if (!LENGTH_A && !LENGTH_B)
         return 0;
 
-    const auto        MATCH_DISTANCE = LENGTH_A == 1 && LENGTH_B == 1 ? 0 : ((std::max(LENGTH_A, LENGTH_B) / 2) - 1);
+    const auto MATCH_DISTANCE = LENGTH_A == 1 && LENGTH_B == 1 ? 0 : ((std::max(LENGTH_A, LENGTH_B) / 2) - 1);
 
-    std::vector<bool> matchesA, matchesB;
-    matchesA.resize(LENGTH_A);
-    matchesB.resize(LENGTH_B);
-    size_t matches = 0;
+    bool*      matchesA = (bool*)alloca(LENGTH_A * sizeof(bool));
+    bool*      matchesB = (bool*)alloca(LENGTH_B * sizeof(bool));
+    size_t     matches  = 0;
     for (size_t i = 0; i < LENGTH_A; ++i) {
         const size_t start = (i > MATCH_DISTANCE ? i - MATCH_DISTANCE : 0);
         const size_t end   = std::min(i + MATCH_DISTANCE + 1, LENGTH_B);
@@ -46,7 +126,7 @@ static float jaroWinkler(const std::string_view& query, const std::string_view& 
         if (!matchesA[i])
             continue;
 
-        while (k < matchesB.size() && !matchesB[k]) {
+        while (k < LENGTH_B && !matchesB[k]) {
             ++k;
         }
 
@@ -80,16 +160,17 @@ constexpr float NO_SALIENT_PENALTY = 0.01F;
 constexpr float EXACT_MATCH_SCORE  = 2.0F;
 
 //
-static float tokenBestMatch(std::string_view qt, std::string_view lastQ, const std::unordered_set<std::string_view>& cset, const std::vector<std::string_view>& cTok) {
+static float tokenBestMatch(std::string_view qt, std::string_view lastQ, const CVarListView& cTok) {
     if (qt.empty())
         return 0.F;
-    if (cset.contains(qt))
-        return 1.F;
 
     float best             = 0.F;
     bool  hasExplicitMatch = false; // prefix or substring match
 
     for (auto ct : cTok) {
+        if (ct == qt)
+            return 1.F;
+
         // strong prefix match - especially important for the last token (partial typing)
         if (ct.starts_with(qt)) {
             hasExplicitMatch = true;
@@ -116,63 +197,45 @@ static float tokenBestMatch(std::string_view qt, std::string_view lastQ, const s
     return (best - MIN_FUZZY_TO_COUNT) / (1.F - MIN_FUZZY_TO_COUNT);
 }
 
-static float scoreCandidate(std::string_view query, std::string_view cand, float freq) {
+static float scoreCandidate(const std::vector<std::string_view>& qTokens, std::string_view queryLowerTrim, const std::string& query, std::string_view cand, float freq,
+                            char tokenBreak) {
     const float popFactor = 1.F + (POPULARITY_FACTOR * std::log1p(std::max(0.F, freq)));
 
     // exact matches occupy a reserved band above any achievable fuzzy score, so a popular
     // partial match can never outrank them; popularity only orders matches within a band
-    std::string queryLower{query};
-    std::ranges::transform(queryLower, queryLower.begin(), ::tolower);
-    if (trim(queryLower) == trim(std::string{cand}))
+    if (queryLowerTrim == trim(cand))
         return EXACT_MATCH_SCORE + popFactor;
 
-    CVarList2                     qTokens(std::string{query}, 0, 's', true, false);
-    CVarList2                     cTokens(std::string{cand}, 0, 's', true, false);
+    CVarListView cTok(cand, tokenBreak);
 
-    std::vector<std::string_view> qTok, cTok;
-    qTok.reserve(qTokens.size());
-    cTok.reserve(cTokens.size());
-    for (const auto& q : qTokens) {
-        qTok.emplace_back(q);
-    }
-    for (const auto& c : cTokens) {
-        cTok.emplace_back(c);
-    }
-
-    if (qTok.empty() || cTok.empty())
+    if (qTokens.empty() || cTok.begin() == cTok.end())
         return 0.F;
 
-    std::unordered_set<std::string_view> cset;
-    cset.reserve(cTok.size());
-    for (auto t : cTok) {
-        cset.insert(t);
-    }
-
-    std::string_view lastQ = qTok.back();
+    std::string_view lastQ = qTokens.back();
 
     // pick salient token as longest
-    std::string_view salient = qTok[0];
-    for (auto t : qTok) {
-        if (t.size() > salient.size())
-            salient = t;
-    }
-
-    float sum      = 0.F;
-    float minMatch = 1.F;
-    for (auto qt : qTok) {
-        float match = tokenBestMatch(qt, lastQ, cset, cTok);
+    std::string_view salient      = qTokens[0];
+    float            salientMatch = tokenBestMatch(qTokens[0], lastQ, cTok);
+    float            sum          = 0.F + salientMatch;
+    float            minMatch     = std::min(1.F, salientMatch);
+    for (auto qt : qTokens | std::views::drop(1)) {
+        float match = tokenBestMatch(qt, lastQ, cTok);
         sum += match;
         minMatch = std::min(minMatch, match);
+
+        if (qt.size() > salient.size()) {
+            salient      = qt;
+            salientMatch = match;
+        }
     }
 
     // if ANY token matches poorly, penalize heavily
     if (minMatch < MIN_TOKEN_MATCH)
         return 0.F;
 
-    float base = sum / sc<float>(qTok.size()); // normalize it
+    float base = sum / sc<float>(qTokens.size()); // normalize it
 
     // if salient token doesn't match strongly, kill the score
-    float salientMatch = tokenBestMatch(salient, lastQ, cset, cTok);
     if (salientMatch < MIN_SALIENT_MATCH)
         base *= NO_SALIENT_PENALTY;
 
@@ -188,13 +251,14 @@ struct SScoreData {
     size_t            idx = 0;
 };
 
-static void workerFn(std::vector<SScoreData>& scores, const std::vector<SP<IFinderResult>>& in, const std::string& query, size_t start, size_t end) {
+static void workerFn(std::vector<SScoreData>& scores, const std::vector<SP<IFinderResult>>& in, const std::vector<std::string_view>& qTokens, const std::string& queryLowerTrim,
+                     const std::string& query, size_t start, size_t end, char tokenBreak) {
     for (size_t i = start; i < end; ++i) {
         auto& ref = scores[i];
 
         float bestScore = 0.F;
         for (auto const& candidate : in[i]->fuzzables()) {
-            auto score = scoreCandidate(query, candidate, in[i]->frequency());
+            auto score = scoreCandidate(qTokens, queryLowerTrim, query, candidate, in[i]->frequency(), tokenBreak);
             bestScore  = std::max(score, bestScore);
         }
         ref.score = bestScore;
@@ -233,7 +297,13 @@ static std::vector<SP<IFinderResult>> getBestResultsStable(std::vector<SScoreDat
 static constexpr const decltype(sysconf(0)) MAX_THREADS = 10;
 
 //
-std::vector<SP<IFinderResult>> Fuzzy::getNResults(const std::vector<SP<IFinderResult>>& in, const std::string& query, size_t results) {
+std::vector<SP<IFinderResult>> Fuzzy::getNResults(const std::vector<SP<IFinderResult>>& in, const std::string& query, size_t results, char tokenBreak) {
+    std::string queryLowerTrim{query};
+    std::ranges::transform(queryLowerTrim, queryLowerTrim.begin(), ::tolower);
+    queryLowerTrim = trim(queryLowerTrim);
+
+    auto                    qTokens = CVarListView(query, tokenBreak) | std::ranges::to<std::vector>();
+
     std::vector<SScoreData> scores;
     scores.resize(in.size());
 
@@ -251,10 +321,11 @@ std::vector<SP<IFinderResult>> Fuzzy::getNResults(const std::vector<SP<IFinderRe
         size_t workElDone = 0, workElPerThread = in.size() / THREADS;
         for (long i = 0; i < THREADS; ++i) {
             if (i == THREADS - 1) {
-                workerThreads[i] = std::thread([&, begin = workElDone] { workerFn(scores, in, query, begin, in.size()); });
+                workerThreads[i] = std::thread([&, begin = workElDone] { workerFn(scores, in, qTokens, queryLowerTrim, query, begin, in.size(), tokenBreak); });
                 break;
             }
-            workerThreads[i] = std::thread([&, begin = workElDone, end = workElDone + workElPerThread] { workerFn(scores, in, query, begin, end); });
+            workerThreads[i] =
+                std::thread([&, begin = workElDone, end = workElDone + workElPerThread] { workerFn(scores, in, qTokens, queryLowerTrim, query, begin, end, tokenBreak); });
 
             workElDone += workElPerThread;
         }
@@ -266,7 +337,7 @@ std::vector<SP<IFinderResult>> Fuzzy::getNResults(const std::vector<SP<IFinderRe
 
         workerThreads.clear();
     } else
-        workerFn(scores, in, query, 0, in.size());
+        workerFn(scores, in, qTokens, queryLowerTrim, query, 0, in.size(), tokenBreak);
 
     return getBestResultsStable(scores, results);
 }
