@@ -10,6 +10,7 @@
 
 #include <hyprutils/string/String.hpp>
 #include <xkbcommon/xkbcommon-keysyms.h>
+#include <algorithm>
 
 using namespace Hyprutils::Math;
 using namespace Hyprutils::String;
@@ -40,6 +41,33 @@ CUI::CUI(bool open) : m_openByDefault(open) {
                      ->size({Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, Hyprtoolkit::CDynamicSize::HT_SIZE_ABSOLUTE, {1.F, 28.F}})
                      ->multiline(false)
                      ->commence();
+
+    // Measure a line independently of the textbox's constrained height. The text
+    // callback also runs after theme/scale changes, without resetting the query.
+    auto inputMetrics = Hyprtoolkit::CTextBuilder::begin()
+                            ->text("Mg")
+                            ->a(0.F)
+                            ->interactable(false)
+                            ->size({Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, {1.F, 1.F}})
+                            ->commence();
+    inputMetrics->setPositionMode(Hyprtoolkit::IElement::HT_POSITION_ABSOLUTE);
+    inputMetrics->rebuild()
+        ->callback([metrics = WP<Hyprtoolkit::CTextElement>{inputMetrics}, input = WP<Hyprtoolkit::CTextboxElement>{m_inputBox}, lastHeight = 28.0]() mutable {
+            if (!metrics || !input)
+                return;
+
+            // Four logical pixels of padding above and below the rendered line.
+            const auto HEIGHT = std::max(28.0, metrics->size().y + 8.0);
+            if (HEIGHT == lastHeight)
+                return;
+
+            lastHeight = HEIGHT;
+            input->rebuild()
+                ->size({Hyprtoolkit::CDynamicSize::HT_SIZE_PERCENT, Hyprtoolkit::CDynamicSize::HT_SIZE_ABSOLUTE, {1.F, HEIGHT}})
+                ->commence();
+        })
+        ->commence();
+    m_background->addChild(inputMetrics);
 
     m_hr = Hyprtoolkit::CRectangleBuilder::begin()
                ->color([this] { return m_backend->getPalette()->m_colors.accent.darken(0.2F); })
