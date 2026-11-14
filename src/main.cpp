@@ -33,6 +33,7 @@ static void printHelp() {
               << " -v | --version             | Print version info\n"
               << "    | --quiet               | Disable all logging\n"
               << "    | --verbose             | Enable too much logging\n"
+              << " -c | --config              | Specify config file to use\n"
               << std::endl;
 }
 
@@ -68,6 +69,7 @@ int main(int argc, char** argv, char** envp) {
     bool                     openByDefault = true, dmenuMode = false, toggle = false;
     std::vector<std::string> explicitOptions;
     std::string              selectedFinder = "";
+    std::string              configPath     = "";
 
     for (int i = 1; i < argc; ++i) {
         std::string_view sv{argv[i]};
@@ -109,6 +111,18 @@ int main(int argc, char** argv, char** envp) {
             ++i;
         } else if (sv == "-t" || sv == "--toggle") {
             toggle = true;
+        } else if (sv == "-c" || sv == "--config") {
+            if (i + 1 >= argc) {
+                Debug::log(ERR, "Missing argument for --config", sv);
+                return 1;
+            }
+
+            if (!configPath.empty()) {
+                Debug::log(ERR, "Multiple config files are provided");
+                return 1;
+            }
+
+            configPath = argv[++i];
         } else {
             Debug::log(ERR, "Unrecognized argument: {}", sv);
             return 1;
@@ -174,7 +188,12 @@ int main(int argc, char** argv, char** envp) {
 
     g_queryProcessor->selectQueryProvider(selectedFinder);
 
-    g_configManager = makeUnique<CConfigManager>();
+    g_configManager = makeUnique<CConfigManager>(configPath.c_str());
+
+    if (!configPath.empty() && configPath != g_configManager->m_configPath) {
+        Debug::log(WARN, "--config specified, but file {} not found. Running with default configuration", configPath);
+    }
+
     g_configManager->parse();
 
     g_ui = makeUnique<CUI>(openByDefault);
