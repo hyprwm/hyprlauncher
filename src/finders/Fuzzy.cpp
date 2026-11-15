@@ -126,7 +126,7 @@ static float scoreCandidate(std::string_view query, std::string_view cand, float
     if (trim(queryLower) == trim(std::string{cand}))
         return EXACT_MATCH_SCORE + popFactor;
 
-    CVarList2                     qTokens(std::string{query}, 0, 's', true, false);
+    CVarList2                     qTokens(std::string{queryLower}, 0, 's', true, false);
     CVarList2                     cTokens(std::string{cand}, 0, 's', true, false);
 
     std::vector<std::string_view> qTok, cTok;
