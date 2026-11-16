@@ -64,6 +64,7 @@ function(hyprprotocol protoPath protoName)
            ${CMAKE_SOURCE_DIR}/protocols/${protoName}-spec.hpp
     COMMAND hyprwire-scanner --client ${path}/${protoName}.xml
             ${CMAKE_SOURCE_DIR}/protocols/
+    DEPENDS ${path}/${protoName}.xml
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
   target_sources(hyprlauncher PRIVATE protocols/${protoName}-client.cpp
                                    protocols/${protoName}-client.hpp
@@ -77,6 +78,7 @@ function(hyprprotocolServer protoPath protoName)
            ${CMAKE_SOURCE_DIR}/protocols/${protoName}-server.hpp
     COMMAND hyprwire-scanner ${path}/${protoName}.xml
             ${CMAKE_SOURCE_DIR}/protocols/
+    DEPENDS ${path}/${protoName}.xml
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
   target_sources(hyprlauncher PRIVATE protocols/${protoName}-server.cpp
                                    protocols/${protoName}-server.hpp
