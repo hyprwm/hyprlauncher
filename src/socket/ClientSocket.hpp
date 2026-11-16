@@ -15,7 +15,7 @@ class CClientIPCSocket {
     void sendOpen();
     void sendClose();
     void sendToggle();
-    void sendOpenWithOptions(const std::vector<std::string>& opts);
+    bool sendOpenWithOptions(const std::vector<std::string>& opts, bool toggle);
     void sendSelectFinder(const std::string& finder);
 
   private:
@@ -24,7 +24,8 @@ class CClientIPCSocket {
     SP<CCHyprlauncherCoreManagerObject> m_manager;
     SP<CCHyprlauncherCoreInfoObject>    m_info;
 
-    bool                                m_canExit = false;
+    bool                                m_canExit         = false;
+    uint32_t                            m_protocolVersion = 1;
 
     std::string                         m_socketPath = "";
 };

@@ -139,7 +139,7 @@ int main(int argc, char** argv, char** envp) {
 
         Debug::log(TRACE, "Active instance already, opening launcher.");
         if (!explicitOptions.empty())
-            socket->sendOpenWithOptions(explicitOptions);
+            return socket->sendOpenWithOptions(explicitOptions, toggle) ? 0 : 1;
         else {
             socket->sendSelectFinder(selectedFinder);
             toggle ? socket->sendToggle() : socket->sendOpen();

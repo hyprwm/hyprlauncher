@@ -23,11 +23,12 @@ CServerIPCSocket::CServerIPCSocket(const std::string& waylandDisplay) {
     if (!m_socket)
         return;
 
-    g_coreImpl = makeShared<CHyprlauncherCoreImpl>(1, [this](SP<Hyprwire::IObject> obj) {
+    g_coreImpl = makeShared<CHyprlauncherCoreImpl>(2, [this](SP<Hyprwire::IObject> obj) {
         auto manager = m_managers.emplace_back(makeShared<CHyprlauncherCoreManagerObject>(std::move(obj)));
 
         manager->setSetOpenState([this](uint32_t state) { setOpenState(state); });
         manager->setOpenWithOptions([this](std::vector<const char*> state) { openWithOptions(state); });
+        manager->setToggleWithOptions([this](std::vector<const char*> options) { openWithOptions(options, true); });
         manager->setSelectFinder([this](const char* finder) { selectFinder(finder); });
 
         manager->setGetInfoObject([this, m = WP<CHyprlauncherCoreManagerObject>{manager}](uint32_t seq) {
@@ -60,9 +61,12 @@ void CServerIPCSocket::setOpenState(uint32_t state) {
     }
 }
 
-void CServerIPCSocket::openWithOptions(const std::vector<const char*>& options) {
-    if (g_ui->windowOpen())
+void CServerIPCSocket::openWithOptions(const std::vector<const char*>& options, bool toggle) {
+    if (g_ui->windowOpen()) {
+        if (toggle)
+            g_ui->setWindowOpen(false);
         return;
+    }
 
     g_ipcFinder->setData(options);
     g_queryProcessor->overrideQueryProvider(g_ipcFinder.get());

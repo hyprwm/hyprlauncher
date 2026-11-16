@@ -1,6 +1,7 @@
 #include "ClientSocket.hpp"
 #include "SocketPath.hpp"
 
+#include <algorithm>
 #include <print>
 
 static SP<CCHyprlauncherCoreImpl> g_coreImpl;
@@ -17,7 +18,7 @@ CClientIPCSocket::CClientIPCSocket(const std::string& waylandDisplay) {
     if (!m_socket)
         return;
 
-    g_coreImpl = makeShared<CCHyprlauncherCoreImpl>(1);
+    g_coreImpl = makeShared<CCHyprlauncherCoreImpl>(2);
 
     m_socket->addImplementation(g_coreImpl);
 
@@ -31,7 +32,8 @@ CClientIPCSocket::CClientIPCSocket(const std::string& waylandDisplay) {
         return;
     }
 
-    m_manager = makeShared<CCHyprlauncherCoreManagerObject>(m_socket->bindProtocol(g_coreImpl->protocol(), 1));
+    m_protocolVersion = std::min(spec->specVer(), 2U);
+    m_manager         = makeShared<CCHyprlauncherCoreManagerObject>(m_socket->bindProtocol(g_coreImpl->protocol(), m_protocolVersion));
 
     if (!m_manager) {
         m_socket.reset();
@@ -53,7 +55,12 @@ void CClientIPCSocket::sendToggle() {
     m_manager->sendSetOpenState(0 /* toggle */);
 }
 
-void CClientIPCSocket::sendOpenWithOptions(const std::vector<std::string>& opts) {
+bool CClientIPCSocket::sendOpenWithOptions(const std::vector<std::string>& opts, bool toggle) {
+    if (toggle && m_protocolVersion < 2) {
+        std::println(stderr, "Toggling with options requires a newer daemon. Restart the hyprlauncher daemon after updating.");
+        return false;
+    }
+
     std::vector<const char*> optsC;
     optsC.reserve(opts.size());
     for (const auto& o : opts) {
@@ -74,12 +81,17 @@ void CClientIPCSocket::sendOpenWithOptions(const std::vector<std::string>& opts)
         m_canExit = true;
     });
 
-    m_manager->sendOpenWithOptions(optsC);
+    if (toggle)
+        m_manager->sendToggleWithOptions(optsC);
+    else
+        m_manager->sendOpenWithOptions(optsC);
 
     while (!m_canExit && m_socket->dispatchEvents(true)) {
         // wait for selection
         ;
     }
+
+    return true;
 }
 
 void CClientIPCSocket::sendSelectFinder(const std::string& finder) {
