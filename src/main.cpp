@@ -190,9 +190,8 @@ int main(int argc, char** argv, char** envp) {
 
     g_configManager = makeUnique<CConfigManager>(configPath.c_str());
 
-    if (!configPath.empty() && configPath != g_configManager->m_configPath) {
+    if (!configPath.empty() && configPath != g_configManager->m_configPath)
         Debug::log(WARN, "--config specified, but file {} not found. Running with default configuration", configPath);
-    }
 
     g_configManager->parse();
 

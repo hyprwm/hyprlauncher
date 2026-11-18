@@ -10,9 +10,9 @@
 
 static std::expected<std::string, std::error_code> getMainConfigPath(const std::string& overridePath = "") {
     if (!overridePath.empty()) {
-        if (!std::filesystem::exists(overridePath)) {
+        if (!std::filesystem::exists(overridePath))
             return std::unexpected(std::make_error_code(std::errc::no_such_file_or_directory));
-        }
+
         return overridePath;
     }
 
