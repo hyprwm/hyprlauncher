@@ -2,16 +2,30 @@
 
 #include "../helpers/Log.hpp"
 
+#include <filesystem>
 #include <unistd.h>
 #include <climits>
 
 #include <hyprutils/path/Path.hpp>
 
-CConfigManager::CConfigManager() : m_inotifyFd(inotify_init()) {
-    const auto CFGPATH = Hyprutils::Path::findConfig("hyprlauncher").first.value_or("");
-    m_configPath       = CFGPATH;
+static std::expected<std::string, std::error_code> getMainConfigPath(const std::string& overridePath = "") {
+    if (!overridePath.empty()) {
+        if (!std::filesystem::exists(overridePath))
+            return std::unexpected(std::make_error_code(std::errc::no_such_file_or_directory));
 
-    m_config = makeUnique<Hyprlang::CConfig>(CFGPATH.c_str(), Hyprlang::SConfigOptions{.allowMissingConfig = true});
+        return overridePath;
+    }
+
+    static const auto PATHS = Hyprutils::Path::findConfig("hyprlauncher");
+
+    if (PATHS.first.has_value())
+        return PATHS.first.value();
+
+    return std::unexpected(std::make_error_code(std::errc::no_such_file_or_directory));
+}
+
+CConfigManager::CConfigManager(const std::string& configPath) : m_inotifyFd(inotify_init()), m_configPath(getMainConfigPath(configPath).value_or("")) {
+    m_config = makeUnique<Hyprlang::CConfig>(m_configPath.c_str(), Hyprlang::SConfigOptions{.allowMissingConfig = true});
 
     m_config->addConfigValue("general:grab_focus", Hyprlang::INT{1});
     m_config->addConfigValue("general:show_apps_on_open", Hyprlang::INT{0});

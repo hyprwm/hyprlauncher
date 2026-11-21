@@ -10,7 +10,8 @@
 
 class CConfigManager {
   public:
-    CConfigManager();
+    CConfigManager(const std::string& configPath);
+
     void                           parse();
 
     void                           onInotifyEvent();
