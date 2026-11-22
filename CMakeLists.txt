@@ -24,6 +24,7 @@ pkg_check_modules(
   REQUIRED
   IMPORTED_TARGET
   hyprtoolkit
+  glib-2.0
   pixman-1
   libdrm
   hyprutils>=0.14.1
@@ -93,3 +94,11 @@ target_include_directories(hyprlauncher PRIVATE "./protocols")
 target_link_libraries(hyprlauncher PkgConfig::deps)
 
 install(TARGETS hyprlauncher)
+
+if(BUILD_TESTING)
+  add_executable(desktop-search-test tests/DesktopSearch.cpp
+    src/finders/desktop/Search.cpp src/finders/IFinderResult.cpp)
+  target_include_directories(desktop-search-test PRIVATE src)
+  target_link_libraries(desktop-search-test PkgConfig::deps)
+  add_test(NAME desktop-search COMMAND desktop-search-test)
+endif()
