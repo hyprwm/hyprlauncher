@@ -30,11 +30,17 @@ class CResultButton {
     bool                               m_added = false;
 
     void                               setActive(bool active);
-    void                               setLabel(const std::string& x, const std::string& icon, std::optional<std::string> font, bool canHaveIcon);
+    void                               setLabel(const std::string& x, const std::string& icon, std::optional<std::string> font, bool canHaveIcon, const std::vector<std::string>& fallbackIcons = {});
 
   private:
     void        updatedFontSize();
+    void        updateIcon();
 
+    std::vector<std::string> m_fallbackIcons;
+    bool        m_canHaveIcon = false;
+    bool        m_iconInitialized = false;
+    int         m_lastIconPixels = 0;
+    std::string m_lastIconTheme;
     bool        m_active       = false;
     int         m_lastFontSize = 0.F;
     std::string m_lastLabel = "", m_lastIcon = "";

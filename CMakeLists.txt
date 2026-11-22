@@ -24,6 +24,8 @@ pkg_check_modules(
   REQUIRED
   IMPORTED_TARGET
   hyprtoolkit
+  gtk4
+  hyprgraphics
   pixman-1
   libdrm
   hyprutils>=0.14.1
@@ -91,5 +93,12 @@ hyprprotocolServer(protocols hyprlauncher_core)
 target_include_directories(hyprlauncher PRIVATE "./protocols")
 
 target_link_libraries(hyprlauncher PkgConfig::deps)
+
+if(BUILD_TESTING)
+  add_executable(application-icons-test tests/Icons.cpp src/helpers/Icons.cpp)
+  target_include_directories(application-icons-test PRIVATE src)
+  target_link_libraries(application-icons-test PkgConfig::deps)
+  add_test(NAME application-icons COMMAND application-icons-test)
+endif()
 
 install(TARGETS hyprlauncher)
