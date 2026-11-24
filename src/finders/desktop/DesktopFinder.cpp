@@ -1,5 +1,6 @@
 #include "DesktopFinder.hpp"
 #include "../../helpers/Log.hpp"
+#include "../../helpers/Icons.hpp"
 #include "../Fuzzy.hpp"
 #include "../Cache.hpp"
 #include "../../config/ConfigManager.hpp"
@@ -90,6 +91,7 @@ class CDesktopEntry : public IFinderResult {
 
     std::string              m_name, m_exec, m_execPath, m_icon, m_stem;
     std::vector<std::string> m_fuzzables;
+    std::vector<std::string> m_fallbackIcons;
     bool                     m_terminal = false;
 
     uint32_t                 m_frequency = 0;
@@ -387,14 +389,15 @@ void CDesktopFinder::cacheEntry(const std::filesystem::path& path) {
         std::erase_if(m_desktopEntryCache, [&pathStem](const auto& e) { return e->m_stem == pathStem; });
     }
 
-    auto& e        = m_desktopEntryCache.emplace_back(makeShared<CDesktopEntry>());
-    e->m_execPath  = EXEC_PATH;
-    e->m_exec      = EXEC;
-    e->m_icon      = ICON;
-    e->m_name      = NAME;
-    e->m_stem      = std::move(pathStem);
-    e->m_terminal  = TERMINAL;
-    e->m_frequency = m_entryFrequencyCache->getCachedEntry(e->m_name);
+    auto& e            = m_desktopEntryCache.emplace_back(makeShared<CDesktopEntry>());
+    e->m_execPath      = EXEC_PATH;
+    e->m_exec          = EXEC;
+    e->m_icon          = ICON;
+    e->m_name          = NAME;
+    e->m_stem          = std::move(pathStem);
+    e->m_terminal      = TERMINAL;
+    e->m_fallbackIcons = applicationFallbackIcons(std::string{extract("Categories")}, TERMINAL);
+    e->m_frequency     = m_entryFrequencyCache->getCachedEntry(e->m_name);
 
     // create fuzzable strings. Read: name, generic name, but also keywords.
     std::vector<std::string_view> strings  = {NAME, GEN_NAME};
@@ -434,10 +437,11 @@ std::vector<SFinderResult> CDesktopFinder::getResultsForQuery(const std::string&
             if (!p)
                 continue;
             results.emplace_back(SFinderResult{
-                .label   = p->m_name,
-                .icon    = *PICONSENABLED ? p->m_icon : "",
-                .result  = p,
-                .hasIcon = true,
+                .label         = p->m_name,
+                .icon          = *PICONSENABLED ? p->m_icon : "",
+                .result        = p,
+                .hasIcon       = bool(*PICONSENABLED),
+                .fallbackIcons = p->m_fallbackIcons,
             });
         }
 
@@ -453,10 +457,11 @@ std::vector<SFinderResult> CDesktopFinder::getResultsForQuery(const std::string&
         if (!p)
             continue;
         results.emplace_back(SFinderResult{
-            .label   = p->m_name,
-            .icon    = *PICONSENABLED ? p->m_icon : "",
-            .result  = p,
-            .hasIcon = true,
+            .label         = p->m_name,
+            .icon          = *PICONSENABLED ? p->m_icon : "",
+            .result        = p,
+            .hasIcon       = bool(*PICONSENABLED),
+            .fallbackIcons = p->m_fallbackIcons,
         });
     }
 

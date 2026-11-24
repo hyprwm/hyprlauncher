@@ -217,7 +217,7 @@ bool CUI::updateResults(std::vector<SFinderResult>&& results) {
         if (m_currentResults.size() <= i)
             m_resultButtons[i]->setLabel("", "", std::nullopt, false);
         else
-            m_resultButtons[i]->setLabel(m_currentResults[i].label, m_currentResults[i].icon, m_currentResults[i].overrideFont, m_currentResults[i].hasIcon);
+            m_resultButtons[i]->setLabel(m_currentResults[i].label, m_currentResults[i].icon, m_currentResults[i].overrideFont, m_currentResults[i].hasIcon, m_currentResults[i].fallbackIcons);
     }
 
     updateActive();
