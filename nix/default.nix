@@ -5,8 +5,6 @@
   pkg-config,
   hyprlang,
   hyprtoolkit,
-  gtk4,
-  hyprgraphics,
   hyprwire,
   libqalculate,
   libxkbcommon,
@@ -33,8 +31,6 @@ stdenv.mkDerivation {
     hyprlang
     hyprwire
     hyprtoolkit
-    gtk4
-    hyprgraphics
     wayland-protocols
     wayland-scanner
   ];

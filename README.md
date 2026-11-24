@@ -21,13 +21,16 @@ A multipurpose and versatile launcher / picker for Hyprland
 
 ## Icon lookup
 
-GTK4 and Hyprgraphics are required to build and run the launcher. Application icons
-are selected for the row size and display scale; absolute desktop-entry icon paths
-are supported. Missing or invalid icons use standard theme icons selected from
-desktop-entry categories and terminal metadata, with a built-in terminal outline
-as a final fallback. Rendered images are cached under
-`$XDG_CACHE_HOME/hyprlauncher/icons` (normally `~/.cache/hyprlauncher/icons`). Setting
-`finders:desktop_icons` to false hides both application icons and fallbacks.
+Application icons use Hyprtoolkit's native icon lookup and image renderer. Icon
+size follows the result row height. Missing icons use standard theme icons
+selected from desktop-entry categories and terminal metadata, with a built-in
+terminal outline as a final fallback. Setting `finders:desktop_icons` to false
+hides both application icons and fallbacks. No additional dependencies or
+launcher-specific disk cache are required.
+
+Size-aware asset selection, absolute icon paths, and detection of invalid artwork
+require the companion Hyprtoolkit icon-resolution fix. With that fix, the toolkit
+selects artwork for the row size and display scale and renders SVGs at that size.
 
 To customize a particular application's icon, use a user desktop-entry override
 in `$XDG_DATA_HOME/applications` (normally `~/.local/share/applications`), preserving

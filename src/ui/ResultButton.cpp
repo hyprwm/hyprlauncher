@@ -99,9 +99,9 @@ void CResultButton::setLabel(const std::string& x, const std::string& icon, std:
         updatedFontSize();
 
     if (!m_iconInitialized || icon != m_lastIcon || canHaveIcon != m_canHaveIcon || fallbackIcons != m_fallbackIcons) {
-        m_lastIcon = icon;
-        m_fallbackIcons = fallbackIcons;
-        m_canHaveIcon = canHaveIcon;
+        m_lastIcon        = icon;
+        m_fallbackIcons   = fallbackIcons;
+        m_canHaveIcon     = canHaveIcon;
         m_iconInitialized = false;
     }
     updateIcon();
@@ -128,33 +128,22 @@ void CResultButton::updatedFontSize() {
 }
 
 void CResultButton::updateIcon() {
-    const auto SCALE = g_ui->m_window ? g_ui->m_window->scale() : 1.F;
-    const int PIXELS = std::ceil(0.7F * ((m_lastFontSize * 2.F) + 4.F) * SCALE);
-    const auto& THEME = g_ui->m_backend->getPalette()->m_vars.iconTheme;
+    const auto  SCALE  = g_ui->m_window ? g_ui->m_window->scale() : 1.F;
+    const int   PIXELS = std::ceil(0.7F * ((m_lastFontSize * 2.F) + 4.F) * SCALE);
+    const auto& THEME  = g_ui->m_backend->getPalette()->m_vars.iconTheme;
     if (m_iconInitialized && PIXELS == m_lastIconPixels && THEME == m_lastIconTheme)
         return;
 
     m_iconInitialized = true;
-    m_lastIconPixels = PIXELS;
-    m_lastIconTheme = THEME;
+    m_lastIconPixels  = PIXELS;
+    m_lastIconTheme   = THEME;
     m_container->clearChildren();
     if (m_canHaveIcon) {
-        auto path = resolveApplicationIcon(m_lastIcon, THEME, PIXELS);
-        auto imagePath = applicationIconImagePath(path, PIXELS);
-        if (imagePath.empty()) {
-            for (const auto& fallback : m_fallbackIcons) {
-                auto fallbackPath = resolveApplicationIcon(fallback, THEME, PIXELS);
-                if (fallbackPath.empty() && THEME.empty())
-                    fallbackPath = resolveApplicationIcon(fallback, "Adwaita", PIXELS);
-                imagePath = applicationIconImagePath(fallbackPath, PIXELS);
-                if (!imagePath.empty())
-                    break;
-            }
-        }
-        if (imagePath.empty())
+        const auto ICON = applicationIcon(*g_ui->m_backend->systemIcons(), m_lastIcon, m_fallbackIcons, m_canHaveIcon);
+        if (!ICON)
             m_container->addChild(m_iconPlaceholder);
         else {
-            m_icon->rebuild()->path(std::move(imagePath))->fitMode(Hyprtoolkit::IMAGE_FIT_MODE_CONTAIN)->commence();
+            m_icon->rebuild()->icon(ICON)->fitMode(Hyprtoolkit::IMAGE_FIT_MODE_CONTAIN)->commence();
             m_container->addChild(m_icon);
         }
     }

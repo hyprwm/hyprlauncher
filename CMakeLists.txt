@@ -24,8 +24,6 @@ pkg_check_modules(
   REQUIRED
   IMPORTED_TARGET
   hyprtoolkit
-  gtk4
-  hyprgraphics
   pixman-1
   libdrm
   hyprutils>=0.14.1
