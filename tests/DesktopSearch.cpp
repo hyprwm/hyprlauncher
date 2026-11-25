@@ -61,5 +61,14 @@ int main() {
     auto extended = entries;
     extended.push_back(makeShared<Entry>("Retrarch Tools"));
     expect(extended, "retrarch", {"Retrarch Tools"});
+    // Full case folding, canonical normalization and code-point edit budgets.
+    expect({makeShared<Entry>("ΟΣ")}, "ος", {"ΟΣ"});
+    expect({makeShared<Entry>("Cafe\u0301")}, "CAFÉ", {"Cafe\u0301"});
+    expect({makeShared<Entry>("\U00010400tool")}, "\U00010428TOOL", {"\U00010400tool"});
+    expect({makeShared<Entry>("猫犬鳥魚")}, "猫犬鳥馬", {"猫犬鳥魚"});
+    expect({makeShared<Entry>("猫犬鳥")}, "猫犬馬", {});
+    expect({makeShared<Entry>("①")}, "1", {});
+    expect({makeShared<Entry>(std::string("\xff") + "Foo")}, "Foo", {});
+    expect({makeShared<Entry>(std::string("Foo\0Bar", 7))}, "Foo", {});
     std::cout << "Desktop search regression checks passed\n";
 }

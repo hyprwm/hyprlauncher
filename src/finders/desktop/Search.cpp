@@ -1,5 +1,8 @@
 #include "Search.hpp"
-#include <glib.h>
+#include <unicode/normalizer2.h>
+#include <unicode/unistr.h>
+#include <unicode/utf8.h>
+#include <limits>
 #include <algorithm>
 #include <numeric>
 #include <sstream>
@@ -7,24 +10,44 @@
 
 namespace {
     std::string normalize(const std::string& text) {
-        if (!g_utf8_validate(text.c_str(), text.size(), nullptr))
+        if (text.size() > static_cast<size_t>(std::numeric_limits<int32_t>::max()))
             return {};
-        auto*       folded     = g_utf8_casefold(text.c_str(), text.size());
-        auto*       normalized = g_utf8_normalize(folded, -1, G_NORMALIZE_DEFAULT_COMPOSE);
-        std::string result     = normalized ? normalized : "";
-        g_free(normalized);
-        g_free(folded);
+        const auto LENGTH = static_cast<int32_t>(text.size());
+        // ICU's fromUTF8 replaces malformed input; validate first to preserve
+        // the existing behavior of rejecting invalid desktop-entry strings.
+        for (int32_t i = 0; i < LENGTH;) {
+            UChar32 point = 0;
+            U8_NEXT(text.data(), i, LENGTH, point);
+            if (point <= 0)
+                return {};
+        }
+        UErrorCode  status     = U_ZERO_ERROR;
+        const auto* normalizer = icu::Normalizer2::getNFCInstance(status);
+        if (U_FAILURE(status) || !normalizer)
+            return {};
+        auto folded = icu::UnicodeString::fromUTF8(icu::StringPiece(text.data(), LENGTH));
+        folded.foldCase();
+        icu::UnicodeString normalized;
+        normalizer->normalize(folded, normalized, status);
+        if (U_FAILURE(status))
+            return {};
+        std::string result;
+        normalized.toUTF8String(result);
         const auto first = result.find_first_not_of(" \t\r\n");
         return first == std::string::npos ? "" : result.substr(first, result.find_last_not_of(" \t\r\n") - first + 1);
     }
-    std::vector<gunichar> codepoints(const std::string& text) {
-        std::vector<gunichar> result;
-        for (const char* p = text.c_str(); *p; p = g_utf8_next_char(p))
-            result.push_back(g_utf8_get_char(p));
+    std::vector<UChar32> codepoints(const std::string& text) {
+        std::vector<UChar32> result;
+        const auto           LENGTH = static_cast<int32_t>(text.size());
+        for (int32_t i = 0; i < LENGTH;) {
+            UChar32 point = 0;
+            U8_NEXT(text.data(), i, LENGTH, point);
+            result.push_back(point);
+        }
         return result;
     }
     // Restricted Damerau-Levenshtein distance: edits and adjacent transpositions.
-    int distance(const std::vector<gunichar>& a, const std::vector<gunichar>& b, int budget) {
+    int distance(const std::vector<UChar32>& a, const std::vector<UChar32>& b, int budget) {
         if (std::abs(int(a.size()) - int(b.size())) > budget)
             return budget + 1;
         std::vector<int> previous(b.size() + 1), older, current(b.size() + 1);

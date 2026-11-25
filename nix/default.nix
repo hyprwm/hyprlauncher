@@ -5,7 +5,6 @@
   pkg-config,
   hyprlang,
   hyprtoolkit,
-  glib,
   hyprwire,
   libqalculate,
   libxkbcommon,
@@ -32,7 +31,6 @@ stdenv.mkDerivation {
     hyprlang
     hyprwire
     hyprtoolkit
-    glib
     wayland-protocols
     wayland-scanner
   ];

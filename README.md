@@ -31,6 +31,6 @@ queries of 8 or more allow two. Adjacent transpositions count as one edit.
 Short queries have no typo fallback. Empty queries retain the frequently used
 application list. Other finders keep their existing search behavior.
 
-GLib is required to build and run the desktop search implementation.
+Unicode matching uses the existing ICU dependency; no additional libraries are required.
 
 Run regression checks with `ctest --test-dir build --output-on-failure`.
