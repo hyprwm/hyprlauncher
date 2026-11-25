@@ -1,4 +1,5 @@
 #include "DesktopFinder.hpp"
+#include "Search.hpp"
 #include "../../helpers/Log.hpp"
 #include "../Fuzzy.hpp"
 #include "../Cache.hpp"
@@ -444,7 +445,7 @@ std::vector<SFinderResult> CDesktopFinder::getResultsForQuery(const std::string&
         return results;
     }
 
-    auto fuzzed = Fuzzy::getNResults(m_desktopEntryCacheGeneric, query, MAX_RESULTS_PER_FINDER);
+    auto fuzzed = DesktopSearch::match(m_desktopEntryCacheGeneric, query, MAX_RESULTS_PER_FINDER);
 
     results.reserve(fuzzed.size());
 

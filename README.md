@@ -17,3 +17,20 @@ A multipurpose and versatile launcher / picker for Hyprland
 - Unicode: `wl-copy`
 - Math: `wl-copy` for copying the result
 - Font: `wl-copy` for copying the result
+
+## Desktop search
+
+Queries are case-insensitive and Unicode-normalized. Exact application names
+come first, followed by name prefixes, name substrings, and matching generic
+names or keywords. Each group is sorted alphabetically. Name/keyword aliases
+come from the installed desktop entries; no default application is inferred
+from the compositor configuration.
+
+If there are no literal matches, queries of 4–7 characters allow one edit;
+queries of 8 or more allow two. Adjacent transpositions count as one edit.
+Short queries have no typo fallback. Empty queries retain the frequently used
+application list. Other finders keep their existing search behavior.
+
+Unicode matching uses the existing ICU dependency; no additional libraries are required.
+
+Run regression checks with `ctest --test-dir build --output-on-failure`.
